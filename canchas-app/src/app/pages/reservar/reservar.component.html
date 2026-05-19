@@ -1,0 +1,32 @@
+<div style="padding:20px">
+  <h2>Reservar Cancha</h2>
+
+  <form (ngSubmit)="guardarReserva()">
+
+    <input 
+      [(ngModel)]="reserva.nombreCliente"
+      name="nombre"
+      placeholder="Nombre"
+      required>
+
+    <br><br>
+
+    <input 
+      type="date"
+      [(ngModel)]="reserva.fecha"
+      name="fecha"
+      required>
+
+    <br><br>
+
+    <input 
+      type="time"
+      [(ngModel)]="reserva.hora"
+      name="hora"
+      required>
+
+    <br><br>
+
+    <button type="submit">Guardar</button>
+  </form>
+</div>

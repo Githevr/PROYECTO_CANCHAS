@@ -1,0 +1,151 @@
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  z-index: 999;
+
+  background: #03080f;
+}
+
+/* LOGO */
+
+.logo-img {
+  height: 50px;
+  width: auto;
+
+  object-fit: contain;
+
+  transform: scale(3.5);
+
+  transform-origin: left center;
+}
+
+/* MENU */
+
+.navbar-nav {
+  gap: 18px;
+}
+
+.nav-link {
+  color: rgba(255,255,255,.88) !important;
+
+  font-weight: 500;
+  font-size: 16px;
+
+  transition: .3s;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  color: #39d353 !important;
+}
+
+.nav-link.active {
+  color: white !important;
+}
+
+/* ACTIONS */
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* LOGIN */
+
+.btn-login {
+  border: none;
+  background: transparent;
+
+  color: white;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-weight: 500;
+
+  transition: .3s;
+}
+
+.btn-login:hover {
+  color: #39d353;
+}
+
+/* ICON */
+
+.user-icon {
+  width: 18px;
+  height: 18px;
+
+  fill: white;
+
+  transition: .3s;
+}
+
+.btn-login:hover .user-icon {
+  fill: #39d353;
+}
+
+/* REGISTER */
+
+.btn-register {
+  border: none;
+
+  background: #4da629;
+  color: white;
+  padding: 5px 15px;
+
+  border-radius: 5px;
+
+  font-weight: 600;
+
+  transition: .3s;
+}
+
+.btn-register:hover {
+  background: #0a5b1a;
+  color: rgb(0, 0, 0);
+}
+
+/* MOBILE */
+
+.navbar-toggler {
+  border: none;
+}
+
+.navbar-toggler:focus {
+  box-shadow: none;
+}
+
+/* RESPONSIVE */
+
+@media(max-width: 992px) {
+
+  .navbar-collapse {
+    margin-top: 20px;
+    padding: 20px;
+
+    border-radius: 14px;
+
+    background: rgba(0,0,0,.92);
+  }
+
+  .navbar-nav {
+    gap: 10px;
+  }
+
+  .navbar-actions {
+    margin-top: 20px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-register {
+    width: 100%;
+  }
+
+}
