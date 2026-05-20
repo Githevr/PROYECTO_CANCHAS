@@ -3,7 +3,7 @@
   <div class="container">
 
     <!-- LOGO -->
-    <a class="navbar-brand d-flex align-items-center" href="#">
+    <a class="navbar-brand d-flex align-items-center" routerLink="/">
 
       <img
         src="/images/logo.png"
@@ -30,41 +30,37 @@
       <ul class="navbar-nav mx-auto">
 
         <li class="nav-item">
-          <a class="nav-link active">
+          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
             Inicio
           </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link">
+          <a class="nav-link" routerLink="/reservar" routerLinkActive="active">
             Canchas
           </a>
         </li>
 
-        <li class="nav-item">
-          <a class="nav-link">
-            Cómo funciona
-          </a>
-        </li>
-
-        <li class="nav-item">
-          <a class="nav-link">
+        <li class="nav-item" *ngIf="authService.estaLogueado()">
+          <a class="nav-link" routerLink="/misreservas" routerLinkActive="active">
             Mis reservas
           </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link">
+          <a class="nav-link" routerLink="/contacto" routerLinkActive="active">
             Contacto
           </a>
         </li>
 
       </ul>
 
-      <!-- ACTIONS -->
-      <div class="navbar-actions">
+      <!-- ACTIONS - NO LOGUEADO -->
+      <div
+        class="navbar-actions"
+        *ngIf="!authService.estaLogueado()">
 
-        <button class="btn-login">
+        <a routerLink="/iniciarsesion" class="btn-login">
 
           <!-- ICONO -->
           <svg
@@ -77,10 +73,33 @@
 
           Iniciar sesión
 
-        </button>
+        </a>
 
-        <button class="btn-register">
+        <a routerLink="/registrar" class="btn-register">
           Registrarse
+        </a>
+
+      </div>
+
+      <!-- ACTIONS - LOGUEADO -->
+      <div
+        class="navbar-actions"
+        *ngIf="authService.estaLogueado()">
+
+        <div class="user-info">
+
+          <div class="user-avatar">
+            {{ authService.obtenerUsuarioActual()?.nombre?.charAt(0)?.toUpperCase() }}
+          </div>
+
+          <span class="user-name">
+            {{ authService.obtenerUsuarioActual()?.nombre }}
+          </span>
+
+        </div>
+
+        <button class="btn-logout" (click)="cerrarSesion()">
+          Cerrar sesión
         </button>
 
       </div>

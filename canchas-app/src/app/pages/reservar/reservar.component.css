@@ -1,3 +1,474 @@
+/* CONTAINER */
+
+.reservar-container {
+  min-height: 100vh;
+
+  background: linear-gradient(135deg, #03080f 0%, #0a1628 50%, #071210 100%);
+
+  padding: 100px 20px 60px;
+}
+
 .container {
-  max-width: 500px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* HEADER */
+
+.page-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.page-header h1 {
+  color: white;
+  font-size: 34px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.page-header p {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 16px;
+  margin: 0;
+}
+
+/* FILTROS */
+
+.filtros-section {
+  display: flex;
+  gap: 20px;
+
+  margin-bottom: 35px;
+  padding: 24px 30px;
+
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+
+  flex-wrap: wrap;
+
+  animation: fadeUp .5s ease;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filtro-item {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filtro-item label {
+  display: block;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.filtro-input {
+  width: 100%;
+
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+
+  padding: 11px 14px;
+
+  color: white;
+  font-size: 14px;
+
+  transition: .3s;
+
+  box-sizing: border-box;
+}
+
+.filtro-input:focus {
+  outline: none;
+  border-color: #39d353;
+  background: rgba(57, 211, 83, 0.06);
+}
+
+.filtro-input option {
+  background: #0a1628;
+  color: white;
+}
+
+/* MENSAJE */
+
+.reservar-mensaje {
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 25px;
+  text-align: center;
+  animation: fadeIn .3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.mensaje-error {
+  background: rgba(248, 81, 73, 0.12);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+  color: #f85149;
+}
+
+.mensaje-exito {
+  background: rgba(57, 211, 83, 0.12);
+  border: 1px solid rgba(57, 211, 83, 0.3);
+  color: #39d353;
+}
+
+/* CANCHAS GRID */
+
+.canchas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 24px;
+
+  margin-bottom: 40px;
+
+  animation: fadeUp .5s ease .1s both;
+}
+
+/* CARD */
+
+.cancha-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+
+  overflow: hidden;
+
+  cursor: pointer;
+
+  transition: .3s;
+}
+
+.cancha-card:hover {
+  border-color: rgba(57, 211, 83, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+.cancha-activa {
+  border-color: #39d353 !important;
+  box-shadow: 0 0 20px rgba(57, 211, 83, 0.2) !important;
+}
+
+/* IMAGEN */
+
+.card-imagen {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.card-imagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: .5s;
+}
+
+.cancha-card:hover .card-imagen img {
+  transform: scale(1.05);
+}
+
+.seleccion-overlay {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(57, 211, 83, 0.3);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seleccion-overlay svg {
+  width: 50px;
+  height: 50px;
+  fill: white;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.3));
+}
+
+.tipo-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+
+  background: rgba(57, 211, 83, 0.85);
+  color: white;
+
+  padding: 6px 14px;
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* CONTENIDO */
+
+.card-contenido {
+  padding: 20px;
+}
+
+.card-nombre-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.card-nombre-row h3 {
+  color: white;
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.card-rating {
+  color: #f59e0b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.card-ubicacion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  margin: 0 0 14px;
+}
+
+.ub-icon {
+  width: 16px;
+  height: 16px;
+  fill: #39d353;
+  flex-shrink: 0;
+}
+
+.card-precio {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.precio-valor {
+  color: #39d353;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.precio-hora {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+}
+
+/* PANEL DE RESERVA */
+
+.reserva-panel {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+
+  padding: 35px;
+
+  animation: fadeUp .4s ease;
+}
+
+.panel-header {
+  margin-bottom: 28px;
+}
+
+.panel-header h2 {
+  color: white;
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.panel-header p {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 15px;
+  margin: 0;
+}
+
+/* HORARIOS */
+
+.horarios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+
+  margin-bottom: 30px;
+}
+
+.horario-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+
+  color: rgba(255, 255, 255, 0.8);
+
+  padding: 12px;
+
+  font-size: 15px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition: .3s;
+}
+
+.horario-btn:hover {
+  border-color: rgba(57, 211, 83, 0.5);
+  background: rgba(57, 211, 83, 0.08);
+  color: white;
+}
+
+.horario-activo {
+  background: rgba(57, 211, 83, 0.15) !important;
+  border-color: #39d353 !important;
+  color: #39d353 !important;
+  font-weight: 700;
+}
+
+.sin-horarios {
+  text-align: center;
+  padding: 30px;
+}
+
+.sin-horarios p {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 15px;
+}
+
+/* RESUMEN */
+
+.resumen-reserva {
+  background: rgba(57, 211, 83, 0.04);
+  border: 1px solid rgba(57, 211, 83, 0.15);
+  border-radius: 16px;
+
+  padding: 28px;
+
+  animation: fadeIn .3s ease;
+}
+
+.resumen-header h3 {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 20px;
+}
+
+.resumen-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  margin-bottom: 24px;
+}
+
+.resumen-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.resumen-total {
+  border-bottom: none;
+  padding-top: 6px;
+}
+
+.resumen-label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+}
+
+.resumen-valor {
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.precio-total {
+  color: #39d353;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.btn-confirmar {
+  width: 100%;
+
+  border: none;
+  background: linear-gradient(135deg, #39d353, #2ea043);
+  color: white;
+
+  padding: 15px;
+
+  border-radius: 12px;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: .3s;
+}
+
+.btn-confirmar:hover {
+  background: linear-gradient(135deg, #2ea043, #238636);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(57, 211, 83, 0.3);
+}
+
+.btn-confirmar:active {
+  transform: translateY(0);
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 768px) {
+
+  .canchas-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filtros-section {
+    flex-direction: column;
+  }
+
+  .reserva-panel {
+    padding: 24px 18px;
+  }
+
+  .horarios-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .page-header h1 {
+    font-size: 26px;
+  }
+
 }

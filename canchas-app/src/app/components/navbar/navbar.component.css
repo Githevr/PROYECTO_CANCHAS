@@ -69,6 +69,9 @@
   font-weight: 500;
 
   transition: .3s;
+
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .btn-login:hover {
@@ -104,11 +107,71 @@
   font-weight: 600;
 
   transition: .3s;
+
+  text-decoration: none;
+  cursor: pointer;
+
+  display: inline-block;
 }
 
 .btn-register:hover {
   background: #0a5b1a;
   color: rgb(0, 0, 0);
+}
+
+/* USUARIO LOGUEADO */
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+
+  background: linear-gradient(135deg, #39d353, #2ea043);
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: white;
+  font-weight: 700;
+  font-size: 15px;
+
+  text-transform: uppercase;
+}
+
+.user-name {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.btn-logout {
+  border: 1px solid rgba(248, 81, 73, 0.4);
+  background: transparent;
+
+  color: #f85149;
+
+  padding: 5px 14px;
+
+  border-radius: 5px;
+
+  font-weight: 500;
+  font-size: 14px;
+
+  cursor: pointer;
+
+  transition: .3s;
+}
+
+.btn-logout:hover {
+  background: rgba(248, 81, 73, 0.15);
+  border-color: #f85149;
 }
 
 /* MOBILE */
@@ -146,6 +209,16 @@
 
   .btn-register {
     width: 100%;
+    text-align: center;
+  }
+
+  .user-info {
+    justify-content: center;
+  }
+
+  .btn-logout {
+    width: 100%;
+    text-align: center;
   }
 
 }

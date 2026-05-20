@@ -1,0 +1,88 @@
+<app-navbar></app-navbar>
+
+<div class="auth-container">
+
+  <div class="auth-card">
+
+    <!-- HEADER -->
+    <div class="auth-header">
+
+      <div class="auth-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+          <path d="M352 128C352 198.7 294.7 256 224 256C153.3 256 96 198.7 96 128C96 57.31 153.3 0 224 0C294.7 0 352 57.31 352 128zM0 482.3C0 383.8 79.8 304 178.3 304H269.7C368.2 304 448 383.8 448 482.3C448 498.7 434.7 512 418.3 512H29.67C13.28 512 0 498.7 0 482.3zM504 312V248H440C426.7 248 416 237.3 416 224C416 210.7 426.7 200 440 200H504V136C504 122.7 514.7 112 528 112C541.3 112 552 122.7 552 136V200H616C629.3 200 640 210.7 640 224C640 237.3 629.3 248 616 248H552V312C552 325.3 541.3 336 528 336C514.7 336 504 325.3 504 312z"/>
+        </svg>
+      </div>
+
+      <h2>Crear cuenta</h2>
+      <p>Regístrate para reservar canchas</p>
+
+    </div>
+
+    <!-- MENSAJE -->
+    <div
+      *ngIf="mensaje"
+      class="auth-mensaje"
+      [class.auth-mensaje-error]="tipoMensaje === 'error'"
+      [class.auth-mensaje-exito]="tipoMensaje === 'exito'">
+      {{ mensaje }}
+    </div>
+
+    <!-- FORMULARIO -->
+    <form (ngSubmit)="registrar()">
+
+      <div class="form-group">
+        <label>Nombre completo</label>
+        <input
+          type="text"
+          [(ngModel)]="nombre"
+          name="nombre"
+          placeholder="Ej: Juan Pérez"
+          required>
+      </div>
+
+      <div class="form-group">
+        <label>Correo electrónico</label>
+        <input
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="correo@ejemplo.com"
+          required>
+      </div>
+
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          placeholder="Mínimo 6 caracteres"
+          required>
+      </div>
+
+      <div class="form-group">
+        <label>Confirmar contraseña</label>
+        <input
+          type="password"
+          [(ngModel)]="confirmarPassword"
+          name="confirmarPassword"
+          placeholder="Repite tu contraseña"
+          required>
+      </div>
+
+      <button type="submit" class="btn-auth">
+        Registrarse
+      </button>
+
+    </form>
+
+    <!-- LINK -->
+    <div class="auth-footer">
+      <p>¿Ya tienes cuenta?
+        <a routerLink="/iniciarsesion">Inicia sesión</a>
+      </p>
+    </div>
+
+  </div>
+
+</div>

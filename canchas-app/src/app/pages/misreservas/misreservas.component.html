@@ -1,0 +1,114 @@
+<app-navbar></app-navbar>
+
+<div class="misreservas-container">
+
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="page-header">
+
+      <h1>Mis Reservas</h1>
+
+      <p>
+        Gestiona tus reservas de canchas deportivas
+      </p>
+
+    </div>
+
+    <!-- SIN RESERVAS -->
+    <div
+      class="empty-state"
+      *ngIf="reservas.length === 0">
+
+      <div class="empty-icon">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+          <path d="M128 64C110.3 64 96 78.3 96 96L96 416C96 433.7 110.3 448 128 448L512 448C529.7 448 544 433.7 544 416L544 96C544 78.3 529.7 64 512 64L128 64zM48 96C48 51.8 83.8 16 128 16L512 16C556.2 16 592 51.8 592 96L592 416C592 460.2 556.2 496 512 496L128 496C83.8 496 48 460.2 48 416L48 96zM200 208C200 194.7 210.7 184 224 184L416 184C429.3 184 440 194.7 440 208C440 221.3 429.3 232 416 232L224 232C210.7 232 200 221.3 200 208zM200 304C200 290.7 210.7 280 224 280L352 280C365.3 280 376 290.7 376 304C376 317.3 365.3 328 352 328L224 328C210.7 328 200 317.3 200 304zM576 560C576 573.3 565.3 584 552 584L88 584C74.7 584 64 573.3 64 560C64 546.7 74.7 536 88 536L552 536C565.3 536 576 546.7 576 560z"/>
+        </svg>
+
+      </div>
+
+      <h2>Aún no tienes ninguna reserva</h2>
+
+      <p>
+        Explora nuestras canchas disponibles y haz tu primera reserva
+      </p>
+
+      <a routerLink="/reservar" class="btn-reservar">
+        Reservar una cancha
+      </a>
+
+    </div>
+
+    <!-- CON RESERVAS -->
+    <div
+      class="reservas-grid"
+      *ngIf="reservas.length > 0">
+
+      <div
+        class="reserva-card"
+        *ngFor="let reserva of reservas">
+
+        <!-- IMAGEN -->
+        <div class="reserva-imagen">
+          <img
+            [src]="reserva.canchaImagen"
+            [alt]="reserva.canchaName">
+
+          <span
+            class="estado-badge"
+            [class.estado-confirmado]="reserva.estado === 'confirmado'"
+            [class.estado-pendiente]="reserva.estado === 'pendiente'">
+
+            {{ reserva.estado === 'confirmado' ? '✓ Confirmado' : '⏳ Pendiente' }}
+
+          </span>
+        </div>
+
+        <!-- INFO -->
+        <div class="reserva-info">
+
+          <h3>{{ reserva.canchaName }}</h3>
+
+          <div class="reserva-detalle">
+
+            <div class="detalle-item">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="detalle-icon">
+                <path d="M152 24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64H96C43 64 0 107 0 160v16 48V448c0 53 43 96 96 96H352c53 0 96-43 96-96V224 176 160c0-53-43-96-96-96H344V24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64H152V24z"/>
+              </svg>
+              <span>{{ reserva.fecha }}</span>
+            </div>
+
+            <div class="detalle-item">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="detalle-icon">
+                <path d="M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM232 120V256c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2V120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/>
+              </svg>
+              <span>{{ reserva.hora }}</span>
+            </div>
+
+          </div>
+
+          <div class="reserva-precio">
+            S/{{ reserva.precio }}
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- BOTON AGREGAR MAS -->
+    <div
+      class="agregar-mas"
+      *ngIf="reservas.length > 0">
+
+      <a routerLink="/reservar" class="btn-nueva-reserva">
+        + Nueva reserva
+      </a>
+
+    </div>
+
+  </div>
+
+</div>

@@ -1,32 +1,197 @@
-<div style="padding:20px">
-  <h2>Reservar Cancha</h2>
+<app-navbar></app-navbar>
 
-  <form (ngSubmit)="guardarReserva()">
+<div class="reservar-container">
 
-    <input 
-      [(ngModel)]="reserva.nombreCliente"
-      name="nombre"
-      placeholder="Nombre"
-      required>
+  <div class="container">
 
-    <br><br>
+    <!-- HEADER -->
+    <div class="page-header">
 
-    <input 
-      type="date"
-      [(ngModel)]="reserva.fecha"
-      name="fecha"
-      required>
+      <h1>Reservar Cancha</h1>
 
-    <br><br>
+      <p>
+        Selecciona una cancha, elige fecha y horario disponible
+      </p>
 
-    <input 
-      type="time"
-      [(ngModel)]="reserva.hora"
-      name="hora"
-      required>
+    </div>
 
-    <br><br>
+    <!-- FILTROS -->
+    <div class="filtros-section">
 
-    <button type="submit">Guardar</button>
-  </form>
+      <div class="filtro-item">
+        <label>Fecha</label>
+        <input
+          type="date"
+          [(ngModel)]="fechaSeleccionada"
+          (change)="onFechaChange()"
+          class="filtro-input">
+      </div>
+
+      <div class="filtro-item">
+        <label>Precio máximo (S/)</label>
+        <select
+          [(ngModel)]="precioMaximo"
+          class="filtro-input">
+
+          <option [value]="0">Todos</option>
+          <option [value]="60">Hasta S/60</option>
+          <option [value]="70">Hasta S/70</option>
+          <option [value]="80">Hasta S/80</option>
+          <option [value]="100">Hasta S/100</option>
+
+        </select>
+      </div>
+
+    </div>
+
+    <!-- MENSAJE -->
+    <div
+      *ngIf="mensaje"
+      class="reservar-mensaje"
+      [class.mensaje-error]="tipoMensaje === 'error'"
+      [class.mensaje-exito]="tipoMensaje === 'exito'">
+      {{ mensaje }}
+    </div>
+
+    <!-- CANCHAS GRID -->
+    <div class="canchas-grid">
+
+      <div
+        class="cancha-card"
+        *ngFor="let cancha of canchasFiltradas"
+        [class.cancha-activa]="canchaSeleccionada?.id === cancha.id"
+        (click)="seleccionarCancha(cancha)">
+
+        <!-- IMAGEN -->
+        <div class="card-imagen">
+          <img
+            [src]="cancha.imagen"
+            [alt]="cancha.nombre">
+
+          <div
+            class="seleccion-overlay"
+            *ngIf="canchaSeleccionada?.id === cancha.id">
+
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+              <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/>
+            </svg>
+
+          </div>
+
+          <span class="tipo-badge">
+            {{ cancha.tipo }}
+          </span>
+        </div>
+
+        <!-- CONTENIDO -->
+        <div class="card-contenido">
+
+          <div class="card-nombre-row">
+            <h3>{{ cancha.nombre }}</h3>
+            <span class="card-rating">⭐ {{ cancha.rating }}</span>
+          </div>
+
+          <p class="card-ubicacion">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" class="ub-icon">
+              <path d="M128 252.6C128 148.4 214 64 320 64C426 64 512 148.4 512 252.6C512 371.9 391.8 514.9 341.6 569.4C329.8 582.2 310.1 582.2 298.3 569.4C248.1 514.9 127.9 371.9 127.9 252.6zM320 320C355.3 320 384 291.3 384 256C384 220.7 355.3 192 320 192C284.7 192 256 220.7 256 256C256 291.3 284.7 320 320 320z"/>
+            </svg>
+            {{ cancha.ubicacion }}
+          </p>
+
+          <div class="card-precio">
+            <span class="precio-valor">S/{{ cancha.precio }}</span>
+            <span class="precio-hora">/hora</span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- PANEL DE RESERVA -->
+    <div
+      class="reserva-panel"
+      *ngIf="canchaSeleccionada">
+
+      <div class="panel-header">
+
+        <h2>Selecciona un horario</h2>
+
+        <p>
+          {{ canchaSeleccionada.nombre }} — {{ fechaSeleccionada }}
+        </p>
+
+      </div>
+
+      <!-- HORARIOS -->
+      <div
+        class="horarios-grid"
+        *ngIf="horariosDisponibles.length > 0">
+
+        <button
+          class="horario-btn"
+          *ngFor="let hora of horariosDisponibles"
+          [class.horario-activo]="horaSeleccionada === hora"
+          (click)="seleccionarHora(hora)">
+
+          {{ hora }}
+
+        </button>
+
+      </div>
+
+      <div
+        class="sin-horarios"
+        *ngIf="horariosDisponibles.length === 0">
+
+        <p>No hay horarios disponibles para esta fecha. Intenta con otra fecha.</p>
+
+      </div>
+
+      <!-- RESUMEN -->
+      <div
+        class="resumen-reserva"
+        *ngIf="horaSeleccionada">
+
+        <div class="resumen-header">
+          <h3>Resumen de tu reserva</h3>
+        </div>
+
+        <div class="resumen-detalle">
+
+          <div class="resumen-item">
+            <span class="resumen-label">Cancha</span>
+            <span class="resumen-valor">{{ canchaSeleccionada.nombre }}</span>
+          </div>
+
+          <div class="resumen-item">
+            <span class="resumen-label">Fecha</span>
+            <span class="resumen-valor">{{ fechaSeleccionada }}</span>
+          </div>
+
+          <div class="resumen-item">
+            <span class="resumen-label">Horario</span>
+            <span class="resumen-valor">{{ horaSeleccionada }}</span>
+          </div>
+
+          <div class="resumen-item resumen-total">
+            <span class="resumen-label">Total</span>
+            <span class="resumen-valor precio-total">S/{{ canchaSeleccionada.precio }}</span>
+          </div>
+
+        </div>
+
+        <button
+          class="btn-confirmar"
+          (click)="confirmarReserva()">
+          Confirmar Reserva
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
 </div>
