@@ -1,36 +1,40 @@
 package com.canchas.model;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
 @Table(name = "reserva")
-
 public class Reserva {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private Long id;
 
+    // Relación con Cancha
     @ManyToOne
     @JoinColumn(name = "cancha_id")
-
     private Canchas cancha;
 
-    private String nombreCliente;
+    // Relación con Cliente
+    @ManyToOne
+    @JoinColumn(name = "cliente_id")
+    private Cliente cliente;
 
     private LocalDate fecha;
 
+    @Column(name = "hora_inicio")
     private LocalTime horaInicio;
 
+    @Column(name = "hora_fin")
     private LocalTime horaFin;
 
     private String estado;
 
+    // ======================
     // GETTERS Y SETTERS
+    // ======================
 
     public Long getId() {
         return id;
@@ -48,12 +52,12 @@ public class Reserva {
         this.cancha = cancha;
     }
 
-    public String getNombreCliente() {
-        return nombreCliente;
+    public Cliente getCliente() {
+        return cliente;
     }
 
-    public void setNombreCliente(String nombreCliente) {
-        this.nombreCliente = nombreCliente;
+    public void setCliente(Cliente cliente) {
+        this.cliente = cliente;
     }
 
     public LocalDate getFecha() {
