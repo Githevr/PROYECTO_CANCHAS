@@ -4,7 +4,6 @@ import com.canchas.dto.ReservaRequest;
 import com.canchas.model.Reserva;
 import com.canchas.service.ReservaService;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -15,8 +14,14 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:4200")
 public class ReservaController {
 
-    @Autowired
-    private ReservaService reservaService;
+
+    private final ReservaService reservaService;
+
+    public ReservaController(
+            ReservaService reservaService
+    ) {
+        this.reservaService = reservaService;
+    }
 
     @PostMapping
     public Reserva reservar(

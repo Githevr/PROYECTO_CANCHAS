@@ -27,13 +27,20 @@ export class IniciarsesionComponent {
 
   mensaje: string = '';
   tipoMensaje: string = '';
+  requiereConfirmacion: boolean = false;
+  mostrarPassword: boolean = false;
 
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
 
+  toggleMostrarPassword() {
+    this.mostrarPassword = !this.mostrarPassword;
+  }
+
   iniciarSesion() {
+    this.requiereConfirmacion = false;
 
     if (!this.email || !this.password) {
 
@@ -70,12 +77,19 @@ export class IniciarsesionComponent {
 
         console.error(error);
 
-        this.mensaje =
-          'Correo o contraseña incorrectos.';
-
+        const errorMsg = error.error?.message || 'Correo o contraseña incorrectos.';
+        this.mensaje = errorMsg;
         this.tipoMensaje = 'error';
+
+        if (errorMsg.includes('confirmar su correo')) {
+          this.requiereConfirmacion = true;
+        }
       }
     });
+  }
+
+  irAConfirmacion() {
+    this.router.navigate(['/confirmar-correo'], { queryParams: { email: this.email } });
   }
 
 }

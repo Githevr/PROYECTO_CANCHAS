@@ -1,26 +1,35 @@
 package com.canchas.controller;
 
+import com.canchas.dto.ConfirmarCorreoRequest;
 import com.canchas.dto.LoginRequest;
 import com.canchas.dto.LoginResponse;
 import com.canchas.model.Cliente;
 import com.canchas.repository.ClienteRepository;
 import com.canchas.service.ClienteService;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/clientes")
 @CrossOrigin("*")
 public class ClienteController {
 
-    @Autowired
-    private ClienteRepository clienteRepository;
+    private final ClienteRepository clienteRepository;
+    private final ClienteService clienteService;
 
-    @Autowired
-    private ClienteService clienteService;
+    public ClienteController(
+            ClienteRepository clienteRepository,
+            ClienteService clienteService
+    ) {
+        this.clienteRepository = clienteRepository;
+        this.clienteService = clienteService;
+    }
 
     @GetMapping
     public List<Cliente> listar() {
@@ -37,17 +46,44 @@ public class ClienteController {
     }
 
     @PostMapping
-    public Cliente guardar(
+    public ResponseEntity<?> guardar(
             @RequestBody Cliente cliente
     ) {
-        return clienteRepository.save(cliente);
+        try {
+            Cliente nuevoCliente = clienteService.guardar(cliente);
+            return ResponseEntity.ok(nuevoCliente);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    @PostMapping("/confirmar")
+    public ResponseEntity<?> confirmarCorreo(
+            @RequestBody ConfirmarCorreoRequest request
+    ) {
+        try {
+            Map<String, Object> response = clienteService.confirmarCorreo(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
     }
 
     @PostMapping("/login")
-    public LoginResponse login(
+    public ResponseEntity<?> login(
             @RequestBody LoginRequest request
     ) {
-        return clienteService.login(request);
+        try {
+            LoginResponse response = clienteService.login(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
     }
-    
 }

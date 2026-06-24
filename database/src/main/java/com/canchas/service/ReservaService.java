@@ -10,7 +10,6 @@ import com.canchas.repository.ClienteRepository;
 import com.canchas.repository.PagoRepository;
 import com.canchas.repository.ReservaRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,17 +19,23 @@ import java.util.List;
 @Service
 public class ReservaService {
 
-    @Autowired
-    private ReservaRepository reservaRepository;
 
-    @Autowired
-    private ClienteRepository clienteRepository;
+    private final ReservaRepository reservaRepository;
+    private final ClienteRepository clienteRepository;
+    private final CanchaRepository canchaRepository;
+    private final PagoRepository pagoRepository;
 
-    @Autowired
-    private CanchaRepository canchaRepository;
-
-    @Autowired
-    private PagoRepository pagoRepository;
+    public ReservaService (
+        ReservaRepository reservaRepository,
+        ClienteRepository clienteRepository,
+        CanchaRepository canchaRepository,
+        PagoRepository pagoRepository
+    ){
+        this.reservaRepository = reservaRepository;
+        this.clienteRepository = clienteRepository;
+        this.canchaRepository = canchaRepository;
+        this.pagoRepository = pagoRepository;
+    }
 
     @Transactional
     public Reserva crearReserva(ReservaRequest request) {

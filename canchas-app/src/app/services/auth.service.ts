@@ -35,6 +35,16 @@ export class AuthService {
     );
   }
 
+  confirmarCorreo(correo: string, codigo: string): Observable<any> {
+    return this.http.post(
+      `${this.apiUrl}/confirmar`,
+      {
+        correo,
+        codigo
+      }
+    );
+  }
+
   cerrarSesion(): void {
     localStorage.removeItem('cliente');
   }

@@ -20,6 +20,11 @@ public class Cliente {
 
     private String password;
 
+    private Boolean confirmado;
+
+    @Column(name = "codigo_confirmacion")
+    private String codigoConfirmacion;
+
     // GETTERS Y SETTERS
 
     public Long getId() {
@@ -68,5 +73,21 @@ public class Cliente {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Boolean getConfirmado() {
+        return confirmado;
+    }
+
+    public void setConfirmado(Boolean confirmado) {
+        this.confirmado = confirmado;
+    }
+
+    public String getCodigoConfirmacion() {
+        return codigoConfirmacion;
+    }
+
+    public void setCodigoConfirmacion(String codigoConfirmacion) {
+        this.codigoConfirmacion = codigoConfirmacion;
     }
 }

@@ -1,0 +1,67 @@
+<app-navbar></app-navbar>
+
+<div class="confirmar-container">
+
+  <div class="confirmar-card">
+
+    <!-- HEADER -->
+    <div class="card-header">
+      <div class="header-icono">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48H48zM0 176V384c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V176L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/>
+        </svg>
+      </div>
+      <h2>Confirma tu Correo</h2>
+      <p>Hemos enviado un código de 6 dígitos a <strong>{{ email || 'tu correo' }}</strong>. Revisa tu bandeja de entrada (o la carpeta de SPAM).</p>
+    </div>
+
+    <!-- MENSAJE -->
+    <div
+      *ngIf="mensaje"
+      class="confirmar-mensaje"
+      [class.mensaje-error]="tipoMensaje === 'error'"
+      [class.mensaje-exito]="tipoMensaje === 'exito'">
+      {{ mensaje }}
+    </div>
+
+    <!-- FORMULARIO -->
+    <form (ngSubmit)="confirmar()">
+
+      <div class="form-group">
+        <label>Correo electrónico</label>
+        <input
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          class="form-input"
+          readonly
+          required>
+      </div>
+
+      <div class="form-group">
+        <label>Código de Confirmación (6 dígitos)</label>
+        <input
+          type="text"
+          [(ngModel)]="codigo"
+          name="codigo"
+          class="form-input input-codigo"
+          placeholder="123456"
+          maxlength="6"
+          autocomplete="off"
+          required>
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="cargando">
+        {{ cargando ? 'Verificando...' : 'Confirmar Cuenta' }}
+      </button>
+
+    </form>
+
+    <!-- FOOTER -->
+    <div class="card-footer">
+      <p>¿Ya confirmaste tu cuenta? <a routerLink="/iniciarsesion">Inicia sesión aquí</a></p>
+    </div>
+
+  </div>
+
+</div>

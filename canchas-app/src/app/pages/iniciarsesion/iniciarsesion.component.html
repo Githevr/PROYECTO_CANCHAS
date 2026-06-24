@@ -6,16 +6,13 @@
 
     <!-- HEADER -->
     <div class="auth-header">
-
       <div class="auth-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-          <path d="M240 192C240 147.8 275.8 112 320 112C364.2 112 400 147.8 400 192C400 236.2 364.2 272 320 272C275.8 272 240 236.2 240 192zM448 192C448 121.3 390.7 64 320 64C249.3 64 192 121.3 192 192C192 262.7 249.3 320 320 320C390.7 320 448 262.7 448 192zM144 544C144 473.3 201.3 416 272 416L368 416C438.7 416 496 473.3 496 544L496 552C496 565.3 506.7 576 520 576C533.3 576 544 565.3 544 552L544 544C544 446.8 465.2 368 368 368L272 368C174.8 368 96 446.8 96 544L96 552C96 565.3 106.7 576 120 576C133.3 576 144 565.3 144 552L144 544z"/>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+          <path d="M144 144v48H304V144c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192V144C80 64.5 144.5 0 224 0s144 64.5 144 144v48h16c26.5 0 48 21.5 48 48V464c0 26.5-21.5 48-48 48H64c-26.5 0-48-21.5-48-48V240c0-26.5 21.5-48 48-48H80z"/>
         </svg>
       </div>
-
-      <h2>Iniciar sesión</h2>
-      <p>Ingresa a tu cuenta para continuar</p>
-
+      <h2>Iniciar Sesión</h2>
+      <p>Ingresa a tu cuenta para gestionar tus reservas</p>
     </div>
 
     <!-- MENSAJE -->
@@ -25,6 +22,9 @@
       [class.auth-mensaje-error]="tipoMensaje === 'error'"
       [class.auth-mensaje-exito]="tipoMensaje === 'exito'">
       {{ mensaje }}
+      <div *ngIf="requiereConfirmacion" class="mt-3">
+        <button class="btn-confirmar-sh" (click)="irAConfirmacion()">Confirmar correo ahora</button>
+      </div>
     </div>
 
     <!-- FORMULARIO -->
@@ -36,31 +36,34 @@
           type="email"
           [(ngModel)]="email"
           name="email"
-          placeholder="correo@ejemplo.com"
+          placeholder="nombre@ejemplo.com"
           required>
       </div>
 
       <div class="form-group">
         <label>Contraseña</label>
-        <input
-          type="password"
-          [(ngModel)]="password"
-          name="password"
-          placeholder="Tu contraseña"
-          required>
+        <div class="input-password-wrapper">
+          <input
+            [type]="mostrarPassword ? 'text' : 'password'"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="••••••••"
+            required>
+          <button type="button" class="btn-toggle-password" (click)="toggleMostrarPassword()" [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+            <i [class]="mostrarPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+          </button>
+        </div>
       </div>
 
       <button type="submit" class="btn-auth">
-        Iniciar sesión
+        Ingresar
       </button>
 
     </form>
 
-    <!-- LINK -->
+    <!-- FOOTER -->
     <div class="auth-footer">
-      <p>¿No tienes cuenta?
-        <a routerLink="/registrar">Regístrate aquí</a>
-      </p>
+      <p>¿No tienes una cuenta? <a routerLink="/registrar">Regístrate aquí</a></p>
     </div>
 
   </div>

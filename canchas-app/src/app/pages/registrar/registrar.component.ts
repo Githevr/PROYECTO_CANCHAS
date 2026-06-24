@@ -29,11 +29,23 @@ export class RegistrarComponent {
 
   mensaje: string = '';
   tipoMensaje: string = '';
+  cargando: boolean = false;
+
+  mostrarPassword: boolean = false;
+  mostrarConfirmarPassword: boolean = false;
 
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
+
+  toggleMostrarPassword() {
+    this.mostrarPassword = !this.mostrarPassword;
+  }
+
+  toggleMostrarConfirmarPassword() {
+    this.mostrarConfirmarPassword = !this.mostrarConfirmarPassword;
+  }
 
   registrar() {
 
@@ -72,27 +84,30 @@ export class RegistrarComponent {
       password: this.password
     };
 
+    this.cargando = true;
+    this.mensaje = 'Creando cuenta y enviando correo de confirmación...';
+    this.tipoMensaje = 'exito';
+
     this.authService.registrar(cliente)
       .subscribe({
 
         next: () => {
-
+          this.cargando = false;
           this.mensaje =
-            '¡Registro exitoso! Redirigiendo al login...';
+            '¡Registro exitoso! Redirigiendo a confirmación de correo...';
 
           this.tipoMensaje = 'exito';
 
           setTimeout(() => {
-            this.router.navigate(['/iniciarsesion']);
+            this.router.navigate(['/confirmar-correo'], { queryParams: { email: this.email } });
           }, 1500);
         },
 
         error: (error) => {
-
+          this.cargando = false;
           console.error(error);
 
-          this.mensaje =
-            'No se pudo registrar el usuario.';
+          this.mensaje = error.error?.message || 'No se pudo registrar el usuario. Verifica tu conexión o si el correo ya existe.';
 
           this.tipoMensaje = 'error';
         }

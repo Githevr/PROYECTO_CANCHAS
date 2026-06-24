@@ -115,6 +115,24 @@
   color: #39d353;
 }
 
+.btn-confirmar-sh {
+  background: #39d353;
+  color: #03080f;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.3s;
+  margin-top: 10px;
+}
+
+.btn-confirmar-sh:hover {
+  background: #2ea043;
+  color: white;
+}
+
 /* FORMULARIO */
 
 .form-group {
@@ -159,6 +177,41 @@
   background: rgba(57, 211, 83, 0.06);
 
   box-shadow: 0 0 0 3px rgba(57, 211, 83, 0.1);
+}
+
+/* TOGGLE PASSWORD (BOOTSTRAP ICONS) */
+.input-password-wrapper {
+  position: relative;
+  display: block;
+}
+
+.input-password-wrapper input {
+  padding-right: 45px;
+}
+
+.btn-toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.3s;
+}
+
+.btn-toggle-password i {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.5);
+  transition: 0.3s;
+}
+
+.btn-toggle-password:hover i {
+  color: #39d353;
 }
 
 /* BOTON */
