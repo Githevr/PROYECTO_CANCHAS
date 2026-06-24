@@ -28,7 +28,7 @@ public class CanchaController {
 
     public List<Canchas> listarCanchas() {
 
-        return canchaRepository.findAll();
+        return canchaRepository.findActiveCanchas();
 
     }
 }

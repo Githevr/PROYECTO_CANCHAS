@@ -1,0 +1,67 @@
+/* ESTILOS PERSONALIZADOS PARA MI BILLETERA */
+
+.transition-all {
+  transition: all 0.25s ease-in-out;
+}
+
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Efectos de botón de carga de archivo */
+.border-dashed {
+  border-style: dashed !important;
+  border-width: 2px !important;
+  border-color: #dee2e6 !important;
+  background-color: #f8f9fa;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.border-dashed:hover {
+  background-color: #e9ecef;
+  border-color: #198754 !important;
+  cursor: pointer;
+}
+
+/* Transición para los botones de recarga */
+.btn-lg {
+  transition: transform 0.1s active;
+}
+
+.btn-lg:active {
+  transform: scale(0.98);
+}
+
+/* Ajustes de scrollbar en el historial */
+.table-responsive::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.badge {
+  font-size: 0.8rem;
+  letter-spacing: 0.3px;
+}
+
+.text-truncate {
+  max-width: 100%;
+}

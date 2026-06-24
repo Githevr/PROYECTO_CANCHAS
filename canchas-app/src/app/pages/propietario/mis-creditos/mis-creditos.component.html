@@ -1,0 +1,284 @@
+<app-navbar></app-navbar>
+
+<div class="container owner-container">
+  <!-- ENCABEZADO DE SECCIÓN -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex align-items-center mb-2">
+        <i class="bi bi-wallet2 text-success fs-2 me-3"></i>
+        <h1 class="h2 mb-0 fw-bold">Mi Billetera y Créditos</h1>
+      </div>
+      <p class="text-muted">Administra tu saldo, solicita recargas para mantener tu complejo activo en la web y revisa el historial de comisiones.</p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- COLUMNA IZQUIERDA: BALANCE Y FORMULARIO DE RECARGA -->
+    <div class="col-lg-5">
+      
+      <!-- CARD DE BALANCE ACTUAL -->
+      <div class="card border-0 shadow-sm rounded-4 text-white mb-4" style="background: linear-gradient(135deg, #198754 0%, #0f5132 100%);">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-white-50 fw-semibold text-uppercase" style="font-size: 0.85rem; letter-spacing: 1px;">Saldo Disponible</span>
+            <i class="bi bi-shield-fill-check text-white-50 fs-5" title="Monedero Seguro"></i>
+          </div>
+          <h2 class="display-5 fw-bold mb-2">S/ {{ authService.obtenerCreditos() | number:'1.2-2' }}</h2>
+          <p class="mb-0 text-white-50 small">
+            <i class="bi bi-info-circle me-1"></i>
+            Cada reserva confirmada descuenta automáticamente una comisión fija del 8% de tu saldo.
+          </p>
+        </div>
+      </div>
+
+      <!-- DATOS DE TRANSFERENCIA -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4 bg-light">
+        <div class="card-body p-4">
+          <h5 class="card-title fw-bold mb-3">¿Cómo recargar créditos?</h5>
+          <p class="text-muted small mb-3">Realiza el pago a cualquiera de nuestras cuentas oficiales y adjunta el comprobante a la derecha:</p>
+          
+          <div class="d-flex align-items-start mb-3">
+            <div class="bg-success text-white p-2 rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+              <i class="bi bi-qr-code fs-5"></i>
+            </div>
+            <div>
+              <h6 class="fw-bold mb-0">Yape / Plin</h6>
+              <span class="text-dark fw-semibold fs-5">987 654 321</span>
+              <div class="text-muted small">Titular: PlayField Administrador</div>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-start">
+            <div class="bg-primary text-white p-2 rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+              <i class="bi bi-bank fs-5"></i>
+            </div>
+            <div>
+              <h6 class="fw-bold mb-0">Cuenta BCP (Transferencias)</h6>
+              <span class="text-dark fw-semibold fs-6">193-98765432-0-88</span>
+              <div class="text-muted small">CCI: 002-1939876543208803</div>
+              <div class="text-muted small">Titular: PlayField S.A.C.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORMULARIO DE SOLICITUD -->
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+          <h5 class="card-title fw-bold mb-4">Registrar nueva recarga</h5>
+          
+          <div *ngIf="mensaje" class="alert p-3 rounded-3 mb-4" 
+               [class.alert-danger]="tipoMensaje === 'error'"
+               [class.alert-success]="tipoMensaje === 'exito'">
+            <i class="bi me-2" [class.bi-exclamation-triangle-fill]="tipoMensaje === 'error'" [class.bi-check-circle-fill]="tipoMensaje === 'exito'"></i>
+            {{ mensaje }}
+          </div>
+
+          <form (ngSubmit)="solicitarRecarga()">
+            <!-- MONTO A RECARGAR -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Monto a depositar (Soles)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light fw-bold">S/</span>
+                <input type="number" 
+                       class="form-control form-control-lg" 
+                       [(ngModel)]="montoRecarga" 
+                       name="monto" 
+                       (input)="actualizarSimulacion()"
+                       min="50" 
+                       placeholder="Mínimo S/ 50" 
+                       required>
+              </div>
+              <div class="form-text text-danger" *ngIf="montoRecarga < 50">
+                <i class="bi bi-exclamation-circle me-1"></i> El monto mínimo de recarga es S/ 50.00 (equivalente a una reserva promedio).
+              </div>
+            </div>
+
+            <!-- SIMULACIÓN DE PROMOCIÓN (EN TIEMPO REAL) -->
+            <div class="card border-0 bg-success-subtle text-success p-3 rounded-3 mb-4" *ngIf="montoRecarga >= 50">
+              <div class="d-flex align-items-center mb-1">
+                <i class="bi bi-gift-fill me-2 fs-5"></i>
+                <span class="fw-bold text-success-emphasis">¡Promoción Aplicada!</span>
+              </div>
+              <p class="small mb-2" *ngIf="esPrimera">
+                <strong>Primera Recarga:</strong> ¡Se duplican tus créditos! Al recargar S/ {{ montoRecarga }} obtienes el doble.
+              </p>
+              <p class="small mb-2" *ngIf="!esPrimera && montoRecarga >= 200">
+                <strong>Bonificación Especial:</strong> Recarga S/ 200 a más y recibe S/ 50.00 adicionales de regalo.
+              </p>
+              <p class="small mb-2" *ngIf="!esPrimera && montoRecarga >= 100 && montoRecarga < 200">
+                <strong>Bonificación Regular:</strong> Recarga S/ 100 a más y recibe S/ 20.00 adicionales de regalo.
+              </p>
+              <div class="border-top border-success-subtle pt-2 d-flex justify-content-between align-items-center">
+                <span class="small fw-semibold">Créditos a recibir:</span>
+                <span class="fs-4 fw-bold">S/ {{ vistaPreviaCreditos | number:'1.2-2' }}</span>
+              </div>
+            </div>
+
+            <!-- MÉTODO DE PAGO -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Método de pago utilizado</label>
+              <select class="form-select" [(ngModel)]="metodoPago" name="metodoPago">
+                <option value="YAPE">YAPE</option>
+                <option value="PLIN">PLIN</option>
+                <option value="TRANSFERENCIA">TRANSFERENCIA BANCARIA (BCP)</option>
+              </select>
+            </div>
+
+            <!-- NÚMERO DE OPERACIÓN -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Número de Operación / Código de Referencia</label>
+              <input type="text" 
+                     class="form-control" 
+                     [(ngModel)]="nroOperacion" 
+                     name="nroOperacion" 
+                     placeholder="Ej: 12345678" 
+                     required>
+              <div class="form-text text-muted small" style="font-size: 0.78rem; line-height: 1.25;">
+                <i class="bi bi-info-circle me-1"></i> Es el código de 6 a 8 dígitos que figura en la captura de tu Yape, Plin o transferencia del BCP (ej: "Ref: 123456" o "Cod. Operación: 987654"). Nos permite validar que tu depósito realmente ingresó.
+              </div>
+            </div>
+
+            <!-- COMPROBANTE -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Foto del Comprobante / Captura de Yape</label>
+              <div class="border border-dashed rounded-3 p-3 text-center bg-light" style="border-style: dashed !important; border-width: 2px !important;">
+                <i class="bi bi-cloud-arrow-up text-muted fs-2 mb-2 d-block"></i>
+                <span class="text-muted small d-block mb-2">Sube una captura clara del comprobante</span>
+                <input type="file" 
+                       class="form-control form-control-sm" 
+                       (change)="onFileChange($event)" 
+                       accept="image/*">
+                <div class="text-success small mt-2 fw-semibold" *ngIf="imagenComprobante">
+                  <i class="bi bi-file-earmark-image me-1"></i> {{ imagenComprobante }} listo para enviar
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow-sm" [disabled]="cargando || montoRecarga < 50">
+              <span *ngIf="!cargando"><i class="bi bi-send-check me-2"></i> Solicitar Recarga</span>
+              <span *ngIf="cargando"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Validando transacción...</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- COLUMNA DERECHA: HISTORIAL DE SOLICITUDES Y MOVIMIENTOS -->
+    <div class="col-lg-7">
+      
+      <!-- LEDGER DE MOVIMIENTOS DE CRÉDITO -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="card-title fw-bold mb-0">Historial de Movimientos</h5>
+            <span class="badge bg-secondary-subtle text-secondary px-3 py-1.5 rounded-pill fw-semibold">Libro Contable</span>
+          </div>
+
+          <div class="table-responsive" style="max-height: 400px;">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col" style="font-size: 0.85rem;" class="text-muted text-uppercase">Fecha</th>
+                  <th scope="col" style="font-size: 0.85rem;" class="text-muted text-uppercase">Concepto</th>
+                  <th scope="col" style="font-size: 0.85rem;" class="text-muted text-uppercase text-end">Monto</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let mov of historial">
+                  <td class="small text-muted" style="white-space: nowrap;">
+                    {{ mov.fecha | date:'dd/MM/yyyy HH:mm' }}
+                  </td>
+                  <td>
+                    <div class="fw-semibold" style="font-size: 0.95rem;">
+                      {{ mov.tipo === 'RECARGA' ? 'Abono por Recarga' : 'Comisión de Reserva' }}
+                    </div>
+                    <div class="text-muted small text-truncate" style="max-width: 250px;" [title]="mov.descripcion">
+                      {{ mov.descripcion }}
+                    </div>
+                  </td>
+                  <td class="text-end fw-bold fs-6" 
+                      [class.text-success]="mov.monto > 0" 
+                      [class.text-danger]="mov.monto < 0">
+                    {{ mov.monto > 0 ? '+' : '' }}S/ {{ mov.monto | number:'1.2-2' }}
+                  </td>
+                </tr>
+                <tr *ngIf="historial.length === 0">
+                  <td colspan="3" class="text-center py-4 text-muted">
+                    <i class="bi bi-journal-x fs-2 d-block mb-2"></i>
+                    No se registran movimientos de créditos aún.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SOLICITUDES DE RECARGA -->
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="card-title fw-bold mb-0">Solicitudes de Recarga</h5>
+            <span class="badge bg-warning-subtle text-warning px-3 py-1.5 rounded-pill fw-semibold">Auditoría de Pagos</span>
+          </div>
+
+          <div class="table-responsive" style="max-height: 400px;">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col" style="font-size: 0.85rem;" class="text-muted text-uppercase">Fecha</th>
+                  <th scope="col" style="font-size: 0.85rem;" class="text-muted text-uppercase">Operación</th>
+                  <th scope="col" style="font-size: 0.85rem;" class="text-muted text-uppercase">Créditos</th>
+                  <th scope="col" style="font-size: 0.85rem;" class="text-muted text-uppercase text-center">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let rec of recargas">
+                  <td class="small text-muted" style="white-space: nowrap;">
+                    {{ rec.fechaSolicitud | date:'dd/MM/yyyy HH:mm' }}
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-uppercase" style="font-size: 0.9rem;">
+                      {{ rec.metodoPago }}
+                    </div>
+                    <div class="text-muted small">
+                      Op: #{{ rec.nroOperacion }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="fw-bold" style="font-size: 0.95rem;">
+                      S/ {{ rec.creditosOtorgados | number:'1.2-2' }}
+                    </div>
+                    <div class="text-muted small text-decoration-underline" style="cursor: pointer;" title="Ver Comprobante">
+                      {{ rec.montoPagado | currency:'S/ ' }} pagados
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge px-3 py-1.5 rounded-pill fw-bold" 
+                          [class.bg-warning-subtle]="rec.estado === 'PENDIENTE'"
+                          [class.text-warning]="rec.estado === 'PENDIENTE'"
+                          [class.bg-success-subtle]="rec.estado === 'APROBADA'"
+                          [class.text-success]="rec.estado === 'APROBADA'"
+                          [class.bg-danger-subtle]="rec.estado === 'RECHAZADA'"
+                          [class.text-danger]="rec.estado === 'RECHAZADA'">
+                      {{ rec.estado === 'PENDIENTE' ? 'Pendiente' : (rec.estado === 'APROBADA' ? 'Aprobada' : 'Rechazada') }}
+                    </span>
+                  </td>
+                </tr>
+                <tr *ngIf="recargas.length === 0">
+                  <td colspan="4" class="text-center py-4 text-muted">
+                    <i class="bi bi-wallet2 fs-2 d-block mb-2"></i>
+                    No has realizado solicitudes de recarga.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

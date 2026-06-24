@@ -21,6 +21,7 @@ export class ConfirmarCorreoComponent implements OnInit {
   mensaje: string = '';
   tipoMensaje: string = '';
   cargando: boolean = false;
+  cargandoReenvio: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -66,6 +67,32 @@ export class ConfirmarCorreoComponent implements OnInit {
         this.cargando = false;
         console.error(error);
         this.mensaje = error.error?.message || 'Código de confirmación incorrecto.';
+        this.tipoMensaje = 'error';
+      }
+    });
+  }
+
+  reenviarCodigo() {
+    if (!this.email) {
+      this.mensaje = 'No se ha especificado un correo electrónico válido.';
+      this.tipoMensaje = 'error';
+      return;
+    }
+
+    this.cargandoReenvio = true;
+    this.mensaje = 'Generando y enviando nuevo código...';
+    this.tipoMensaje = 'info';
+
+    this.authService.reenviarCodigo(this.email).subscribe({
+      next: (response) => {
+        this.cargandoReenvio = false;
+        this.mensaje = response.mensaje || 'Se ha enviado un nuevo código de confirmación de 6 dígitos.';
+        this.tipoMensaje = 'exito';
+        this.codigo = ''; // Limpiar el código anterior ingresado
+      },
+      error: (error) => {
+        this.cargandoReenvio = false;
+        this.mensaje = error.error?.message || 'No se pudo reenviar el código. Inténtalo más tarde.';
         this.tipoMensaje = 'error';
       }
     });

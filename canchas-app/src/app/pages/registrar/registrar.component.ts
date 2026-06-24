@@ -27,6 +27,8 @@ export class RegistrarComponent {
   password: string = '';
   confirmarPassword: string = '';
 
+  rol: string = 'JUGADOR';
+
   mensaje: string = '';
   tipoMensaje: string = '';
   cargando: boolean = false;
@@ -81,7 +83,8 @@ export class RegistrarComponent {
       apellido: '',
       telefono: '',
       correo: this.email,
-      password: this.password
+      password: this.password,
+      rol: this.rol
     };
 
     this.cargando = true;

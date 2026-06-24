@@ -23,6 +23,7 @@ import { ReservaService, CanchaLocal } from '../../services/reserva.service';
 export class ReservarComponent implements OnInit {
 
   canchas: CanchaLocal[] = [];
+  preselectedCanchaId: number | null = null;
 
   // FILTROS
   fechaSeleccionada: string = '';
@@ -41,6 +42,11 @@ export class ReservarComponent implements OnInit {
   mensaje: string = '';
   tipoMensaje: string = '';
 
+  // MODAL DE DETALLES
+  mostrarDetallesModal: boolean = false;
+  canchaParaDetalles: CanchaLocal | null = null;
+  imagenActivaIndex: number = 0;
+
   constructor(
     private authService: AuthService,
     private reservaService: ReservaService,
@@ -49,19 +55,6 @@ export class ReservarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-
-    this.reservaService
-  .getCanchas()
-  .subscribe({
-    next: (data) => {
-      this.canchas = data;
-    },
-    error: () => {
-      this.mensaje = 'Error cargando canchas';
-      this.tipoMensaje = 'error';
-    }
-  });
-
     const hoy = new Date();
     const anio = hoy.getFullYear();
     const mes = String(hoy.getMonth() + 1).padStart(2, '0');
@@ -70,22 +63,34 @@ export class ReservarComponent implements OnInit {
     this.fechaSeleccionada = `${anio}-${mes}-${dia}`;
 
     this.route.queryParams.subscribe(params => {
-
-      this.ubicacionSeleccionada =
-        params['ubicacion'] || '';
-
-      this.deporteSeleccionado =
-        params['deporte'] || '';
-
-      this.fechaSeleccionada =
-        params['fecha'] || this.fechaSeleccionada;
-
-      this.horaFiltro =
-        params['hora'] || '';
-
+      this.ubicacionSeleccionada = params['ubicacion'] || '';
+      this.deporteSeleccionado = params['deporte'] || '';
+      this.fechaSeleccionada = params['fecha'] || this.fechaSeleccionada;
+      this.horaFiltro = params['hora'] || '';
+      
+      const canchaId = params['canchaId'];
+      if (canchaId) {
+        this.preselectedCanchaId = Number(canchaId);
+      }
     });
 
-    this.actualizarDisponibilidad();
+    this.reservaService.getCanchas().subscribe({
+      next: (data) => {
+        this.canchas = data;
+        // Si viene una cancha preseleccionada desde el inicio, la activamos automáticamente
+        if (this.preselectedCanchaId) {
+          const encontrada = this.canchas.find(c => c.id === this.preselectedCanchaId);
+          if (encontrada) {
+            this.canchaSeleccionada = encontrada;
+            this.actualizarDisponibilidad();
+          }
+        }
+      },
+      error: () => {
+        this.mensaje = 'Error cargando canchas';
+        this.tipoMensaje = 'error';
+      }
+    });
   }
 
   get canchasFiltradas(): CanchaLocal[] {
@@ -113,7 +118,7 @@ export class ReservarComponent implements OnInit {
 
   }
 
-  // FILTRO POR UBICACION
+  // FILTRO POR UBICACION (SOPORTA LEGAJO Y COMPLEJOS POR CIUDAD)
   if (
     this.ubicacionSeleccionada &&
     this.ubicacionSeleccionada !== 'Todos'
@@ -121,11 +126,8 @@ export class ReservarComponent implements OnInit {
 
     resultado = resultado.filter(
       c =>
-        c.ubicacion
-          .toLowerCase()
-          .includes(
-            this.ubicacionSeleccionada.toLowerCase()
-          )
+        c.ubicacion.toLowerCase().includes(this.ubicacionSeleccionada.toLowerCase()) ||
+        (c.complejo && c.complejo.ciudad.toLowerCase().includes(this.ubicacionSeleccionada.toLowerCase()))
     );
 
   }
@@ -321,6 +323,80 @@ export class ReservarComponent implements OnInit {
 
     });
 
-}
+  }
 
+  obtenerImagenUrl(imagen: string): string {
+    if (!imagen) return '/images/cancha_placeholder.jpg';
+    if (imagen.startsWith('/uploads/')) {
+      return 'http://localhost:8080' + imagen;
+    }
+    return imagen;
+  }
+
+  // MÉTODOS PARA MODAL DE DETALLES
+  abrirDetalles(cancha: CanchaLocal, event: Event) {
+    event.stopPropagation(); // Evita seleccionar la cancha al hacer clic en el botón de detalles
+    this.canchaParaDetalles = cancha;
+    this.imagenActivaIndex = 0;
+    this.mostrarDetallesModal = true;
+  }
+
+  cerrarDetalles() {
+    this.mostrarDetallesModal = false;
+    this.canchaParaDetalles = null;
+  }
+
+  siguienteImagen() {
+    if (this.canchaParaDetalles) {
+      const imagenes = this.obtenerTodasLasImagenes(this.canchaParaDetalles);
+      if (imagenes.length > 0) {
+        this.imagenActivaIndex = (this.imagenActivaIndex + 1) % imagenes.length;
+      }
+    }
+  }
+
+  anteriorImagen() {
+    if (this.canchaParaDetalles) {
+      const imagenes = this.obtenerTodasLasImagenes(this.canchaParaDetalles);
+      if (imagenes.length > 0) {
+        this.imagenActivaIndex = (this.imagenActivaIndex - 1 + imagenes.length) % imagenes.length;
+      }
+    }
+  }
+
+  obtenerTodasLasImagenes(cancha: CanchaLocal): string[] {
+    const urls: string[] = [];
+    if (cancha.imagen) {
+      urls.push(this.obtenerImagenUrl(cancha.imagen));
+    }
+    if (cancha.imagenes && cancha.imagenes.length > 0) {
+      cancha.imagenes.forEach(img => {
+        const resolved = this.obtenerImagenUrl(img);
+        if (!urls.includes(resolved)) {
+          urls.push(resolved);
+        }
+      });
+    }
+    if (urls.length === 0) {
+      urls.push('/images/cancha_placeholder.jpg');
+    }
+    return urls;
+  }
+
+  obtenerBeneficiosLista(beneficiosString: string): string[] {
+    if (!beneficiosString) return [];
+    return beneficiosString.split(',').map(b => b.trim()).filter(b => b.length > 0);
+  }
+
+  seleccionarDesdeDetalles(cancha: CanchaLocal) {
+    this.seleccionarCancha(cancha);
+    this.cerrarDetalles();
+    // Scroll suave hasta el panel de reserva
+    setTimeout(() => {
+      const panel = document.querySelector('.reserva-panel');
+      if (panel) {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }
 }

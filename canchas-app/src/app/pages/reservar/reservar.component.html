@@ -118,7 +118,7 @@
         <div class="card-imagen">
 
           <img
-            [src]="cancha.imagen"
+            [src]="obtenerImagenUrl(cancha.imagen)"
             [alt]="cancha.nombre">
 
           <span class="tipo-badge">
@@ -137,9 +137,14 @@
 
         <div class="card-contenido">
 
-          <div class="card-nombre-row">
+          <div class="card-nombre-row align-items-start">
 
-            <h3>{{ cancha.nombre }}</h3>
+            <div>
+              <h3 class="mb-0 fw-bold">{{ cancha.nombre }}</h3>
+              <div class="text-success small fw-semibold mt-1" *ngIf="cancha.complejo" style="font-size: 0.8rem;">
+                <i class="bi bi-building-fill me-1"></i>{{ cancha.complejo.nombre }}
+              </div>
+            </div>
 
             <span class="card-rating">
               ⭐ {{ cancha.rating }}
@@ -158,7 +163,7 @@
 
             </svg>
 
-            {{ cancha.ubicacion }}
+            {{ cancha.complejo ? (cancha.complejo.direccion + ', ' + cancha.complejo.ciudad) : cancha.ubicacion }}
 
           </p>
 
@@ -174,7 +179,7 @@
 
           </div>
 
-          <button class="btn-detalles">
+          <button class="btn-detalles" (click)="abrirDetalles(cancha, $event)">
 
             Ver detalles
 
@@ -327,6 +332,118 @@
 
     </div>
 
+  </div>
+
+  <!-- MODAL DE DETALLES ULTRA PREMIUM -->
+  <div class="modal-overlay" *ngIf="mostrarDetallesModal && canchaParaDetalles" (click)="cerrarDetalles()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      
+      <!-- BOTÓN CERRAR -->
+      <button class="modal-close-btn" (click)="cerrarDetalles()">
+        ✕
+      </button>
+
+      <!-- GALERÍA / CARRUSEL DE IMÁGENES -->
+      <div class="modal-gallery">
+        <img 
+          [src]="obtenerTodasLasImagenes(canchaParaDetalles)[imagenActivaIndex]" 
+          [alt]="canchaParaDetalles.nombre" 
+          class="modal-gallery-img">
+
+        <!-- FLECHAS DE NAVEGACIÓN (SI HAY MÁS DE 1 IMAGEN) -->
+        <ng-container *ngIf="obtenerTodasLasImagenes(canchaParaDetalles).length > 1">
+          <button class="gallery-nav-btn prev" (click)="anteriorImagen()">
+            ‹
+          </button>
+          <button class="gallery-nav-btn next" (click)="siguienteImagen()">
+            ›
+          </button>
+          
+          <!-- INDICADORES (PUNTOS) -->
+          <div class="gallery-dots">
+            <span 
+              *ngFor="let img of obtenerTodasLasImagenes(canchaParaDetalles); let i = index" 
+              class="gallery-dot"
+              [class.active]="i === imagenActivaIndex"
+              (click)="imagenActivaIndex = i; $event.stopPropagation();">
+            </span>
+          </div>
+        </ng-container>
+
+        <!-- BADGE SPORT TYPE -->
+        <span class="modal-sport-badge">
+          {{ canchaParaDetalles.tipo }}
+        </span>
+      </div>
+
+      <!-- CONTENIDO DEL MODAL -->
+      <div class="modal-body-content">
+        
+        <!-- ENCABEZADO -->
+        <div class="modal-header-info">
+          <span class="modal-complex-name" *ngIf="canchaParaDetalles.complejo">
+            🏢 {{ canchaParaDetalles.complejo.nombre }}
+          </span>
+          <h2 class="modal-cancha-title">{{ canchaParaDetalles.nombre }}</h2>
+          
+          <div class="modal-meta-row">
+            <span class="modal-rating">⭐ {{ canchaParaDetalles.rating }}</span>
+            <span class="modal-price-tag">S/{{ canchaParaDetalles.precio }} <small>/ hora</small></span>
+          </div>
+        </div>
+
+        <hr class="modal-divider">
+
+        <!-- UBICACIÓN -->
+        <div class="modal-info-section">
+          <h3>Ubicación</h3>
+          <p class="modal-address">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" class="modal-icon-svg green-icon">
+              <path d="M128 252.6C128 148.4 214 64 320 64C426 64 512 148.4 512 252.6C512 371.9 391.8 514.9 341.6 569.4C329.8 582.2 310.1 582.2 298.3 569.4C248.1 514.9 127.9 371.9 127.9 252.6zM320 320C355.3 320 384 291.3 384 256C384 220.7 355.3 192 320 192C284.7 192 256 220.7 256 256C256 291.3 284.7 320 320 320z"/>
+            </svg>
+            {{ canchaParaDetalles.complejo ? (canchaParaDetalles.complejo.direccion + ', ' + canchaParaDetalles.complejo.ciudad) : canchaParaDetalles.ubicacion }}
+          </p>
+        </div>
+
+        <!-- DESCRIPCIÓN (SI EL DUEÑO LA REGISTRÓ) -->
+        <div class="modal-info-section" *ngIf="canchaParaDetalles.complejo?.descripcion">
+          <h3>Sobre el Complejo</h3>
+          <p class="modal-description-text">
+            {{ canchaParaDetalles.complejo.descripcion }}
+          </p>
+        </div>
+
+        <!-- BENEFICIOS / COMODIDADES -->
+        <div class="modal-info-section" *ngIf="canchaParaDetalles.complejo?.beneficios">
+          <h3>Comodidades y Servicios</h3>
+          <div class="modal-benefits-grid">
+            <span class="benefit-tag" *ngFor="let beneficio of obtenerBeneficiosLista(canchaParaDetalles.complejo.beneficios)">
+              ✓ {{ beneficio }}
+            </span>
+          </div>
+        </div>
+
+        <!-- CONTACTO -->
+        <div class="modal-info-section" *ngIf="canchaParaDetalles.complejo?.telefonoContacto">
+          <h3>Contacto Directo</h3>
+          <p class="modal-phone">
+            📞 {{ canchaParaDetalles.complejo.telefonoContacto }}
+          </p>
+        </div>
+
+        <!-- ACCIONES -->
+        <div class="modal-actions">
+          <button class="modal-btn-primary" (click)="seleccionarDesdeDetalles(canchaParaDetalles)">
+            Reservar esta Cancha
+          </button>
+          <button class="modal-btn-secondary" (click)="cerrarDetalles()">
+            Volver a la Lista
+          </button>
+        </div>
+
+      </div>
+
+    </div>
   </div>
 
 </div>

@@ -51,9 +51,22 @@
           required>
       </div>
 
-      <button type="submit" class="btn-submit" [disabled]="cargando">
+      <button type="submit" class="btn-submit" [disabled]="cargando || cargandoReenvio">
         {{ cargando ? 'Verificando...' : 'Confirmar Cuenta' }}
       </button>
+
+      <!-- OPCIÓN DE REENVIAR CÓDIGO -->
+      <div class="text-center mt-3 mb-2">
+        <p class="small mb-1 text-white-50" style="font-size: 0.8rem;">¿No recibiste el código o ya expiró (10 min)?</p>
+        <button type="button" 
+                class="btn btn-link btn-sm text-success fw-bold text-decoration-none p-0" 
+                style="font-size: 0.85rem; color: #39d353 !important; border: none; background: transparent; cursor: pointer;"
+                (click)="reenviarCodigo()" 
+                [disabled]="cargando || cargandoReenvio">
+          <span *ngIf="!cargandoReenvio">Reenviar código nuevo</span>
+          <span *ngIf="cargandoReenvio" class="spinner-border spinner-border-sm me-1" role="status" style="width: 14px; height: 14px;"></span>
+        </button>
+      </div>
 
     </form>
 

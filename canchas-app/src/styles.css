@@ -1,1 +1,364 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Clase para empujar el contenido de las páginas del dueño debajo del navbar fijo */
+.owner-container {
+  margin-top: 95px !important;
+  margin-bottom: 3rem !important;
+}
+
+/* ==============================================
+   MODAL DE DETALLES ULTRA PREMIUM (GLOBAL STYLES)
+   ============================================== */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(10, 15, 26, 0.85); /* oscuro con opacidad */
+  backdrop-filter: blur(8px); /* desenfoque premium */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-container {
+  background: #111827; /* Gris muy oscuro, elegante */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 650px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ocultar barra de scroll en modal container pero permitir scroll */
+.modal-container::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-container::-webkit-scrollbar-track {
+  background: #111827;
+}
+.modal-container::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 10px;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+/* GALERÍA DE IMÁGENES */
+.modal-gallery {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  background: #1f2937;
+  overflow: hidden;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+}
+
+.modal-gallery-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: fadeImage 0.3s ease-in-out;
+}
+
+/* BOTONES DE NAVEGACIÓN GALERÍA */
+.gallery-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(17, 24, 39, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  cursor: pointer;
+  transition: 0.2s;
+  z-index: 5;
+}
+
+.gallery-nav-btn:hover {
+  background: rgba(17, 24, 39, 0.8);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.gallery-nav-btn.prev {
+  left: 15px;
+}
+
+.gallery-nav-btn.next {
+  right: 15px;
+}
+
+.gallery-dots {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 5;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 6px 12px;
+  border-radius: 12px;
+}
+
+.gallery-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.gallery-dot.active {
+  background: #39d353;
+  width: 16px;
+  border-radius: 4px;
+}
+
+.modal-sport-badge {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background: #39d353;
+  color: #0b0f19;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* CONTENIDO */
+.modal-body-content {
+  padding: 24px;
+}
+
+.modal-header-info {
+  margin-bottom: 16px;
+}
+
+.modal-complex-name {
+  font-size: 13px;
+  color: #39d353;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.modal-cancha-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: white;
+  margin: 0 0 10px 0;
+}
+
+.modal-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-rating {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f59e0b;
+}
+
+.modal-price-tag {
+  font-size: 24px;
+  font-weight: 800;
+  color: #39d353;
+}
+
+.modal-price-tag small {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+}
+
+.modal-divider {
+  border: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 16px 0;
+}
+
+.modal-info-section {
+  margin-bottom: 20px;
+}
+
+.modal-info-section h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 10px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modal-address {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.modal-icon-svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.modal-icon-svg.green-icon {
+  color: #39d353;
+}
+
+.modal-description-text {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.modal-benefits-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.benefit-tag {
+  background: rgba(57, 211, 83, 0.08);
+  border: 1px solid rgba(57, 211, 83, 0.15);
+  color: #39d353;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.modal-phone {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+}
+
+/* ACCIONES */
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.modal-btn-primary {
+  background: #39d353;
+  color: #0b0f19;
+  border: none;
+  padding: 14px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.2s;
+  box-shadow: 0 4px 14px rgba(57, 211, 83, 0.3);
+}
+
+.modal-btn-primary:hover {
+  background: #2ebd44;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(57, 211, 83, 0.4);
+}
+
+.modal-btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 14px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.modal-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ANIMACIONES */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: scale(0.9) translateY(20px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes fadeImage {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+
+/* RESPONSIVE */
+@media(max-width: 576px) {
+  .modal-container {
+    max-height: 95vh;
+  }
+  .modal-actions {
+    grid-template-columns: 1fr;
+  }
+  .modal-gallery {
+    height: 200px;
+  }
+  .modal-cancha-title {
+    font-size: 22px;
+  }
+}
+

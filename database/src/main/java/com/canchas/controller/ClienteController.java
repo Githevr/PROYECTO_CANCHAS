@@ -86,4 +86,17 @@ public class ClienteController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
+
+    // Endpoint para regenerar y reenviar el código OTP por correo
+    @PostMapping("/reenviar-codigo")
+    public ResponseEntity<?> reenviarCodigo(@RequestParam String correo) {
+        try {
+            Map<String, Object> response = clienteService.reenviarCodigo(correo);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
 }

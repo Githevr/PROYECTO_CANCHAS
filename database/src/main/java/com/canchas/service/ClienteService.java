@@ -8,6 +8,8 @@ import com.canchas.repository.ClienteRepository;
 
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -34,11 +36,20 @@ public class ClienteService {
         int codigoGen = 100000 + random.nextInt(900000);
         String codigo = String.valueOf(codigoGen);
 
-        // Regla de Negocio 3: Establecer estado inicial sin confirmar
+        // Regla de Negocio 3: Establecer estado inicial sin confirmar, rol, saldo inicial y fecha de código
         cliente.setConfirmado(false);
         cliente.setCodigoConfirmacion(codigo);
+        cliente.setFechaGeneracionCodigo(LocalDateTime.now());
+        
+        // Si el rol no está asignado o es inválido, por seguridad se asigna JUGADOR
+        if (cliente.getRol() == null || (!cliente.getRol().equals("JUGADOR") && !cliente.getRol().equals("PROPIETARIO"))) {
+            cliente.setRol("JUGADOR");
+        }
+        
+        // El saldo inicial de créditos es siempre 0.00 en la billetera
+        cliente.setCreditos(BigDecimal.ZERO);
 
-        // Guardamos el cliente primero para asegurar que se persista correctamente
+        // Guardamos el cliente
         Cliente nuevoCliente = clienteRepository.save(cliente);
 
         // Regla de Negocio 4: Envío REAL del correo mediante servidor SMTP externo
@@ -58,6 +69,12 @@ public class ClienteService {
 
         if (!cliente.getCodigoConfirmacion().equals(request.getCodigo())) {
             throw new RuntimeException("El código de confirmación es incorrecto.");
+        }
+
+        // Regla de Negocio: Validar expiración de 10 minutos para el código OTP
+        if (cliente.getFechaGeneracionCodigo() == null || 
+            LocalDateTime.now().isAfter(cliente.getFechaGeneracionCodigo().plusMinutes(10))) {
+            throw new RuntimeException("El código de confirmación ha expirado (límite de 10 minutos). Por favor, solicita uno nuevo.");
         }
 
         cliente.setConfirmado(true);
@@ -88,7 +105,37 @@ public class ClienteService {
                 cliente.getId(),
                 cliente.getNombre(),
                 cliente.getCorreo(),
-                "Login exitoso"
+                "Login exitoso",
+                cliente.getRol(),
+                cliente.getCreditos()
         );
+    }
+
+    // Regla de Negocio: Regenerar y reenviar un nuevo código OTP por correo
+    public Map<String, Object> reenviarCodigo(String correo) {
+        Cliente cliente = clienteRepository.findByCorreo(correo)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con el correo: " + correo));
+
+        if (Boolean.TRUE.equals(cliente.getConfirmado())) {
+            throw new RuntimeException("Este correo electrónico ya se encuentra confirmado y verificado.");
+        }
+
+        // Generar un nuevo código aleatorio de 6 dígitos
+        Random random = new Random();
+        int codigoGen = 100000 + random.nextInt(900000);
+        String codigo = String.valueOf(codigoGen);
+
+        // Actualizar el código y renovar el tiempo de expiración
+        cliente.setCodigoConfirmacion(codigo);
+        cliente.setFechaGeneracionCodigo(LocalDateTime.now());
+        clienteRepository.save(cliente);
+
+        // Enviar el nuevo correo mediante el servidor SMTP
+        emailService.enviarCodigoConfirmacion(cliente.getCorreo(), cliente.getNombre(), codigo);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("exito", true);
+        response.put("mensaje", "Se ha enviado un nuevo código de confirmación de 6 dígitos a tu bandeja de correo.");
+        return response;
     }
 }

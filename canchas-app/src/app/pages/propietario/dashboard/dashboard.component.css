@@ -1,0 +1,58 @@
+/* ESTILOS DE CONTROL DE RESERVAS */
+
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Efecto hover especial para la tarjeta de créditos que redirige a su sección */
+.border-hover-success {
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.border-hover-success:hover {
+  border-color: #198754 !important;
+  background-color: #fcfdfd !important;
+}
+
+/* Scrollbar personalizado para la tabla de reservas */
+.table-responsive::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.badge {
+  font-size: 0.8rem;
+  letter-spacing: 0.3px;
+}
+
+.btn {
+  transition: transform 0.1s active;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.text-truncate {
+  max-width: 100%;
+}

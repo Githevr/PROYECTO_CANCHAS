@@ -1,6 +1,7 @@
 package com.canchas.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "cliente")
@@ -16,6 +17,7 @@ public class Cliente {
 
     private String telefono;
 
+    @Column(unique = true, nullable = false)
     private String correo;
 
     private String password;
@@ -24,6 +26,21 @@ public class Cliente {
 
     @Column(name = "codigo_confirmacion")
     private String codigoConfirmacion;
+
+    @Column(nullable = false)
+    private String rol; // 'JUGADOR', 'PROPIETARIO', 'ADMIN'
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal creditos; // Saldo de créditos de la plataforma
+
+    @Column(name = "fecha_generacion_codigo")
+    private java.time.LocalDateTime fechaGeneracionCodigo;
+
+    // Constructor por defecto
+    public Cliente() {
+        this.rol = "JUGADOR"; // Rol por defecto
+        this.creditos = BigDecimal.ZERO;
+    }
 
     // GETTERS Y SETTERS
 
@@ -89,5 +106,29 @@ public class Cliente {
 
     public void setCodigoConfirmacion(String codigoConfirmacion) {
         this.codigoConfirmacion = codigoConfirmacion;
+    }
+
+    public String getRol() {
+        return rol;
+    }
+
+    public void setRol(String rol) {
+        this.rol = rol;
+    }
+
+    public BigDecimal getCreditos() {
+        return creditos;
+    }
+
+    public void setCreditos(BigDecimal creditos) {
+        this.creditos = creditos;
+    }
+
+    public java.time.LocalDateTime getFechaGeneracionCodigo() {
+        return fechaGeneracionCodigo;
+    }
+
+    public void setFechaGeneracionCodigo(java.time.LocalDateTime fechaGeneracionCodigo) {
+        this.fechaGeneracionCodigo = fechaGeneracionCodigo;
     }
 }

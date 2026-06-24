@@ -1,17 +1,13 @@
 package com.canchas.service;
 
+import com.canchas.config.ConfiguracionPlataforma;
 import com.canchas.dto.ReservaRequest;
-import com.canchas.model.Canchas;
-import com.canchas.model.Cliente;
-import com.canchas.model.Pago;
-import com.canchas.model.Reserva;
-import com.canchas.repository.CanchaRepository;
-import com.canchas.repository.ClienteRepository;
-import com.canchas.repository.PagoRepository;
-import com.canchas.repository.ReservaRepository;
+import com.canchas.model.*;
+import com.canchas.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,143 +15,236 @@ import java.util.List;
 @Service
 public class ReservaService {
 
-
     private final ReservaRepository reservaRepository;
     private final ClienteRepository clienteRepository;
     private final CanchaRepository canchaRepository;
     private final PagoRepository pagoRepository;
+    private final HistorialCreditoRepository historialCreditoRepository;
 
-    public ReservaService (
-        ReservaRepository reservaRepository,
-        ClienteRepository clienteRepository,
-        CanchaRepository canchaRepository,
-        PagoRepository pagoRepository
-    ){
+    public ReservaService(
+            ReservaRepository reservaRepository,
+            ClienteRepository clienteRepository,
+            CanchaRepository canchaRepository,
+            PagoRepository pagoRepository,
+            HistorialCreditoRepository historialCreditoRepository
+    ) {
         this.reservaRepository = reservaRepository;
         this.clienteRepository = clienteRepository;
         this.canchaRepository = canchaRepository;
         this.pagoRepository = pagoRepository;
+        this.historialCreditoRepository = historialCreditoRepository;
     }
 
     @Transactional
     public Reserva crearReserva(ReservaRequest request) {
+        Canchas cancha = canchaRepository.findById(request.getCanchaId())
+                .orElseThrow(() -> new RuntimeException("Cancha no encontrada"));
 
-        boolean ocupada =
-                reservaRepository
-                        .existsByCanchaIdAndFechaAndHoraInicio(
-                                request.getCanchaId(),
-                                request.getFecha(),
-                                request.getHoraInicio()
-                        );
+        // 1. REGLA DE NEGOCIO REFINADA: Una cancha solo está ocupada si la reserva está CONFIRMADA o PAGADA.
+        // Las reservas en 'PENDIENTE_ADELANTO' no bloquean el horario para permitir que otros jugadores intenten reservar.
+        List<Reserva> reservasExistentes = reservaRepository.findByCanchaIdAndFecha(request.getCanchaId(), request.getFecha());
+        boolean ocupada = reservasExistentes.stream()
+                .anyMatch(r -> r.getHoraInicio().equals(request.getHoraInicio()) && 
+                               (r.getEstado().equals("CONFIRMADA") || r.getEstado().equals("PAGADO")));
 
         if (ocupada) {
-            throw new RuntimeException(
-                    "La cancha ya se encuentra reservada en ese horario"
-            );
+            throw new RuntimeException("La cancha ya se encuentra reservada y confirmada en ese horario por otro usuario.");
         }
 
-        Cliente cliente = clienteRepository
-                .findById(request.getClienteId())
-                .orElseThrow(() ->
-                        new RuntimeException("Cliente no encontrado"));
+        Cliente cliente = clienteRepository.findById(request.getClienteId())
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
 
-        Canchas cancha = canchaRepository
-                .findById(request.getCanchaId())
-                .orElseThrow(() ->
-                        new RuntimeException("Cancha no encontrada"));
+        ComplejoDeportivo complejo = cancha.getComplejo();
+        if (complejo == null) {
+            throw new RuntimeException("Esta cancha no está asociada a ningún complejo deportivo activo.");
+        }
 
+        Cliente propietario = complejo.getPropietario();
+        
+        // El precio total se basa en el precio por hora de la cancha
+        BigDecimal precioTotal = BigDecimal.valueOf(cancha.getPrecio());
+        
+        // Obtener la comisión del 8% utilizando el Singleton
+        double factorComision = ConfiguracionPlataforma.getInstancia().getComisionPorcentaje();
+        BigDecimal comisionAplicada = precioTotal.multiply(BigDecimal.valueOf(factorComision));
+
+        // Validar que el dueño tenga saldo de créditos suficiente en la plataforma
+        if (propietario.getCreditos().compareTo(comisionAplicada) < 0) {
+            throw new RuntimeException("El complejo deportivo no puede recibir reservas temporalmente por saldo de créditos insuficiente.");
+        }
+
+        // 2. Crear la reserva en estado PENDIENTE_ADELANTO (Aún no bloquea el horario oficialmente hasta que yapee)
         Reserva reserva = new Reserva();
-
         reserva.setCliente(cliente);
         reserva.setCancha(cancha);
-
         reserva.setFecha(request.getFecha());
-
         reserva.setHoraInicio(request.getHoraInicio());
-
-        // Si la reserva es de 1 hora
-        reserva.setHoraFin(
-                request.getHoraInicio().plusHours(1)
-        );
-
-        reserva.setEstado("CONFIRMADA");
+        reserva.setHoraFin(request.getHoraInicio().plusHours(1));
+        reserva.setPrecioTotal(precioTotal);
+        reserva.setComisionAplicada(comisionAplicada);
+        reserva.setEstado("PENDIENTE_ADELANTO"); 
 
         reserva = reservaRepository.save(reserva);
 
+        // 3. Registrar el Pago como PENDIENTE
         Pago pago = new Pago();
-
         pago.setReserva(reserva);
-        pago.setMonto(request.getMonto());
-        pago.setMetodoPago(request.getMetodoPago());
+        pago.setMonto(precioTotal.doubleValue());
+        pago.setMetodoPago("DIRECTO AL PROPIETARIO");
         pago.setFechaPago(LocalDateTime.now());
-        pago.setEstado("PAGADO");
+        pago.setEstado("PENDIENTE");
 
         pagoRepository.save(pago);
 
         return reserva;
     }
-    
 
-    public List<String> obtenerHorariosDisponibles(
-            Long canchaId,
-            LocalDate fecha
-    ) {
+    @Transactional
+    public Reserva confirmarReserva(Long reservaId, Long propietarioId) {
+        Reserva reserva = reservaRepository.findById(reservaId)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
 
+        ComplejoDeportivo complejo = reserva.getCancha().getComplejo();
+        if (complejo == null || !complejo.getPropietario().getId().equals(propietarioId)) {
+            throw new RuntimeException("No tiene permisos para confirmar esta reserva.");
+        }
+
+        if (!reserva.getEstado().equals("PENDIENTE_ADELANTO")) {
+            throw new RuntimeException("La reserva no está pendiente de adelanto. Estado actual: " + reserva.getEstado());
+        }
+
+        // 1. REGLA DE NEGOCIO CLAVE: Verificar en tiempo real que otra persona no haya confirmado este mismo horario antes.
+        List<Reserva> reservasExistentes = reservaRepository.findByCanchaIdAndFecha(reserva.getCancha().getId(), reserva.getFecha());
+        boolean yaOcupada = reservasExistentes.stream()
+                .anyMatch(r -> !r.getId().equals(reservaId) && 
+                               r.getHoraInicio().equals(reserva.getHoraInicio()) && 
+                               (r.getEstado().equals("CONFIRMADA") || r.getEstado().equals("PAGADO")));
+
+        if (yaOcupada) {
+            // Si otra reserva se confirmó primero, cancelamos esta automáticamente para evitar conflictos
+            reserva.setEstado("LIBERADA_POR_INASISTENCIA"); // O estado RECHAZADA
+            reservaRepository.save(reserva);
+            throw new RuntimeException("El horario ya fue confirmado y reservado por otro jugador que pagó primero. Esta solicitud ha sido anulada.");
+        }
+
+        Cliente propietario = complejo.getPropietario();
+        BigDecimal comision = reserva.getComisionAplicada();
+
+        // Verificar créditos del dueño
+        if (propietario.getCreditos().compareTo(comision) < 0) {
+            throw new RuntimeException("Saldo de créditos insuficiente. Por favor, recargue saldo en la sección Mis Créditos para confirmar esta reserva.");
+        }
+
+        // 2. Descontar la comisión del 8% sobre el total
+        propietario.setCreditos(propietario.getCreditos().subtract(comision));
+        clienteRepository.save(propietario);
+
+        // Registrar en el historial de créditos
+        String descripcionHistorial = String.format("Comisión (8%%) por reserva de %s en %s (Total: S/ %.2f)",
+                reserva.getCliente().getNombre(),
+                reserva.getCancha().getNombre(),
+                reserva.getPrecioTotal());
+        
+        HistorialCredito historial = new HistorialCredito(
+                propietario,
+                "DESCUENTO_RESERVA",
+                comision.negate(),
+                descripcionHistorial
+        );
+        historialCreditoRepository.save(historial);
+
+        // 3. Confirmar la reserva (Ahora sí bloquea el horario oficialmente en el sistema)
+        reserva.setEstado("CONFIRMADA");
+        
+        Pago pago = pagoRepository.findByReservaId(reservaId)
+                .orElse(new Pago());
+        pago.setReserva(reserva);
+        pago.setEstado("PAGO_PARCIAL"); // 50% recibido
+
+        pagoRepository.save(pago);
+        return reservaRepository.save(reserva);
+    }
+
+    @Transactional
+    public Reserva finalizarPagoReserva(Long reservaId, Long propietarioId) {
+        Reserva reserva = reservaRepository.findById(reservaId)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+
+        ComplejoDeportivo complejo = reserva.getCancha().getComplejo();
+        if (complejo == null || !complejo.getPropietario().getId().equals(propietarioId)) {
+            throw new RuntimeException("No tiene permisos para modificar esta reserva.");
+        }
+
+        if (!reserva.getEstado().equals("CONFIRMADA")) {
+            throw new RuntimeException("Solo se pueden finalizar reservas que estén previamente CONFIRMADAS.");
+        }
+
+        reserva.setEstado("PAGADO");
+
+        Pago pago = pagoRepository.findByReservaId(reservaId)
+                .orElseThrow(() -> new RuntimeException("Registro de pago no encontrado"));
+        pago.setEstado("PAGADO");
+
+        pagoRepository.save(pago);
+        return reservaRepository.save(reserva);
+    }
+
+    @Transactional
+    public Reserva liberarReservaPorInasistencia(Long reservaId, Long propietarioId) {
+        Reserva reserva = reservaRepository.findById(reservaId)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+
+        ComplejoDeportivo complejo = reserva.getCancha().getComplejo();
+        if (complejo == null || !complejo.getPropietario().getId().equals(propietarioId)) {
+            throw new RuntimeException("No tiene permisos para liberar esta reserva.");
+        }
+
+        String estadoActual = reserva.getEstado();
+        if (!estadoActual.equals("CONFIRMADA")) {
+            throw new RuntimeException("Solo se puede liberar por inasistencia una reserva que ya estaba CONFIRMADA.");
+        }
+
+        // Marcar inasistencia. La cancha queda libre y el dueño retiene el 50% de garantía.
+        reserva.setEstado("LIBERADA_POR_INASISTENCIA");
+
+        Pago pago = pagoRepository.findByReservaId(reservaId)
+                .orElseThrow(() -> new RuntimeException("Registro de pago no encontrado"));
+        pago.setEstado("LIBERADA_POR_INASISTENCIA");
+
+        pagoRepository.save(pago);
+        return reservaRepository.save(reserva);
+    }
+
+    public List<Reserva> obtenerReservasPorPropietario(Long propietarioId) {
+        return reservaRepository.findByPropietarioId(propietarioId);
+    }
+
+    public List<Reserva> obtenerReservasPorCliente(Long clienteId) {
+        return reservaRepository.findByClienteId(clienteId);
+    }
+
+    public Reserva obtenerPorId(Long id) {
+        return reservaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+    }
+
+    public List<String> obtenerHorariosDisponibles(Long canchaId, LocalDate fecha) {
         List<String> horariosBase = List.of(
-                "09:00",
-                "10:00",
-                "11:00",
-                "12:00",
-                "13:00",
-                "14:00",
-                "15:00",
-                "16:00",
-                "17:00",
-                "18:00",
-                "19:00",
-                "20:00",
-                "21:00"
+                "09:00", "10:00", "11:00", "12:00", "13:00", "14:00",
+                "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"
         );
 
-        List<Reserva> reservas =
-                reservaRepository.findByCanchaIdAndFecha(
-                        canchaId,
-                        fecha
-                );
+        List<Reserva> reservas = reservaRepository.findByCanchaIdAndFecha(canchaId, fecha);
 
-        List<String> horariosOcupados =
-                reservas.stream()
-                        .map(reserva ->
-                                reserva.getHoraInicio()
-                                        .toString()
-                                        .substring(0, 5)
-                        )
-                        .toList();
+        // REGLA DE NEGOCIO REFINADA: Solo los horarios CONFIRMADA y PAGADO están ocupados.
+        // PENDIENTE_ADELANTO no bloquea el horario, por lo que sigue figurando disponible.
+        List<String> horariosOcupados = reservas.stream()
+                .filter(r -> r.getEstado().equals("CONFIRMADA") || r.getEstado().equals("PAGADO"))
+                .map(reserva -> reserva.getHoraInicio().toString().substring(0, 5))
+                .toList();
 
         return horariosBase.stream()
-                .filter(hora ->
-                        !horariosOcupados.contains(hora)
-                )
+                .filter(hora -> !horariosOcupados.contains(hora))
                 .toList();
     }
-    public List<Reserva> obtenerReservasPorCliente(
-        Long clienteId
-) {
-
-    return reservaRepository.findByClienteId(
-            clienteId
-    );
-
-}
-public Reserva obtenerPorId(Long id) {
-
-    return reservaRepository
-            .findById(id)
-            .orElseThrow(
-                    () -> new RuntimeException(
-                            "Reserva no encontrada"
-                    )
-            );
-
-}
 }

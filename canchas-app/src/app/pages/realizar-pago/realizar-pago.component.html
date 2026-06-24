@@ -5,27 +5,54 @@
   <div class="container">
 
     <div class="page-header">
-
-      <h1>
-        Realizar <span>Pago</span>
-      </h1>
-
-      <p>
-        Completa tu pago para confirmar tu reserva
-      </p>
-
+      <h1>Realizar <span>Pago Directo</span></h1>
+      <p>Completa el adelanto de garantía para asegurar tu horario con el propietario</p>
     </div>
 
-    <div
-      class="resumen-card"
-      *ngIf="reserva">
+    <!-- CUENTA REGRESIVA DE PAGO (10 MINUTOS) -->
+    <div class="alert alert-warning border border-warning shadow-sm rounded-4 p-3 mb-4 text-center d-flex align-items-center justify-content-center" 
+         *ngIf="reserva && reserva.estado === 'PENDIENTE_ADELANTO' && !tiempoExpirado">
+      <i class="bi bi-hourglass-split fs-4 me-3 text-warning animate-spin"></i>
+      <div class="text-start">
+        <span class="fw-bold text-dark">Tiempo restante para transferir:</span>
+        <span class="fs-5 fw-bold text-warning-emphasis ms-2">{{ tiempoFormateado }}</span>
+        <span class="text-muted small d-block" style="font-size: 0.78rem;">Completa tu Yape/Plin y envía el comprobante antes que termine el tiempo. Si te demoras, otra persona puede reservar y confirmar antes ese mismo horario.</span>
+      </div>
+    </div>
+
+    <!-- PANTALLA DE TIEMPO EXPIRADO (BLOQUEO) -->
+    <div class="card border-0 shadow-sm rounded-4 p-5 text-center mb-5 bg-danger-subtle bg-opacity-10 border border-danger border-opacity-25" 
+         *ngIf="reserva && reserva.estado === 'PENDIENTE_ADELANTO' && tiempoExpirado">
+      <i class="bi bi-clock-history text-danger display-1 mb-3 d-block"></i>
+      <h3 class="fw-bold text-danger fs-3">El tiempo de espera ha expirado</h3>
+      <p class="text-muted mb-4 mx-auto" style="max-width: 600px; font-size: 0.95rem;">
+        El plazo máximo de 10 minutos para reportar tu captura de pago al propietario ha finalizado. Por seguridad y para no bloquear la cancha, el horario sigue figurando disponible en la web. Si aún deseas alquilarla, debes iniciar el proceso de reserva nuevamente.
+      </p>
+      <div class="d-flex justify-content-center gap-3">
+        <a routerLink="/" class="btn btn-danger fw-bold px-4 shadow-sm">Volver al Inicio</a>
+        <a routerLink="/reservar" class="btn btn-outline-danger fw-bold px-4">Elegir Horario de Nuevo</a>
+      </div>
+    </div>
+
+    <!-- CONTENEDOR ACTIVO (SOLO SI NO HA EXPIRADO) -->
+    <ng-container *ngIf="!tiempoExpirado">
+
+      <div
+        class="resumen-card"
+        *ngIf="reserva">
 
       <div class="resumen-header">
 
         <h2>Resumen de tu reserva</h2>
 
-        <span class="badge-pendiente">
-          Pendiente de pago
+        <span class="badge px-3 py-1.5 rounded-pill bg-warning-subtle text-warning fw-bold border border-warning" *ngIf="reserva.estado === 'PENDIENTE_ADELANTO'">
+          Espera de garantía (50%)
+        </span>
+        <span class="badge px-3 py-1.5 rounded-pill bg-info-subtle text-info fw-bold border border-info" *ngIf="reserva.estado === 'CONFIRMADA'">
+          Confirmada (Adelanto Pagado)
+        </span>
+        <span class="badge px-3 py-1.5 rounded-pill bg-success-subtle text-success fw-bold border border-success" *ngIf="reserva.estado === 'PAGADO'">
+          Pagado 100%
         </span>
 
       </div>
@@ -36,7 +63,7 @@
         <div class="cancha-imagen">
 
           <img
-            [src]="reserva.cancha.imagen"
+            [src]="obtenerImagenUrl(reserva.cancha.imagen)"
             [alt]="reserva.cancha.nombre">
 
         </div>
@@ -44,20 +71,20 @@
         <!-- DATOS -->
         <div class="cancha-info">
 
-          <h3>
+          <h3 class="fw-bold text-success mb-1">
             {{ reserva.cancha.nombre }}
           </h3>
 
-          <p>
-            📍 {{ reserva.cancha.ubicacion }}
+          <p class="mb-1 text-muted">
+            📍 Complejo: <strong>{{ reserva.cancha.complejo ? reserva.cancha.complejo.nombre : 'PlayField' }}</strong>
           </p>
 
-          <p>
-            ⚽ {{ reserva.cancha.tipo }}
+          <p class="mb-1 text-muted">
+            🗺️ Dirección: {{ reserva.cancha.complejo ? reserva.cancha.complejo.direccion : reserva.cancha.ubicacion }}
           </p>
 
-          <p>
-            ⭐ {{ reserva.cancha.rating }}
+          <p class="mb-1 text-muted">
+            ⚽ Deporte: {{ reserva.cancha.tipo }}
           </p>
 
         </div>
@@ -68,7 +95,7 @@
           <span>Fecha</span>
 
           <strong>
-            {{ reserva.fecha }}
+            {{ reserva.fecha | date:'dd/MM/yyyy' }}
           </strong>
 
         </div>
@@ -78,88 +105,139 @@
 
           <span>Horario</span>
 
-          <strong>
-            {{ reserva.horaInicio }}
+          <strong class="text-success">
+            {{ reserva.horaInicio.substring(0, 5) }}
             -
-            {{ reserva.horaFin }}
+            {{ reserva.horaFin.substring(0, 5) }}
           </strong>
 
         </div>
 
-        <!-- PRECIO -->
-        <div class="info-box total-box">
+        <!-- PRECIO TOTAL -->
+        <div class="info-box">
 
-          <span>Total a pagar</span>
+          <span>Precio Total</span>
 
           <strong>
-            S/{{ reserva.cancha.precio }}
+            S/ {{ reserva.precioTotal | number:'1.2-2' }}
           </strong>
 
         </div>
 
       </div>
 
-      <div class="mensaje-reserva">
+      <!-- SELECCIONADOR DE PORCENTAJE DE PAGO (50% VS 100%) -->
+      <div class="payment-selector-section border border-light-subtle rounded-4 p-4 my-4 bg-white shadow-sm">
+        <h3 class="fw-bold text-dark fs-5 mb-3">
+          <i class="bi bi-shield-check text-success me-2"></i>Selecciona tu modalidad de pago:
+        </h3>
+        
+        <div class="row g-3">
+          <!-- OPCIÓN 50% ADELANTO -->
+          <div class="col-sm-6">
+            <div class="card border-2 p-3 rounded-4 transition-all"
+                 [class.border-success]="tipoPago === '50'"
+                 [class.bg-success-subtle]="tipoPago === '50'"
+                 [class.bg-opacity-10]="tipoPago === '50'"
+                 [class.border-light-subtle]="tipoPago !== '50'"
+                 (click)="tipoPago = '50'"
+                 style="cursor: pointer;">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="fw-bold text-dark fs-6">Garantía Mínima (50%)</span>
+                <input type="radio" name="tipoPago" [checked]="tipoPago === '50'" class="form-check-input border-success">
+              </div>
+              <p class="text-muted small mb-3">Paga el monto mínimo requerido para congelar y asegurar tu horario en el sistema. El saldo restante de <strong>S/ {{ (reserva.precioTotal / 2) | number:'1.2-2' }}</strong> lo liquidas directamente en el local.</p>
+              <div class="fs-4 fw-bold text-success">S/ {{ (reserva.precioTotal / 2) | number:'1.2-2' }}</div>
+            </div>
+          </div>
 
-        Tu reserva fue registrada correctamente.
-        Realiza el pago y envía el comprobante
-        para confirmar tu horario.
+          <!-- OPCIÓN 100% COMPLETO -->
+          <div class="col-sm-6">
+            <div class="card border-2 p-3 rounded-4 transition-all"
+                 [class.border-success]="tipoPago === '100'"
+                 [class.bg-success-subtle]="tipoPago === '100'"
+                 [class.bg-opacity-10]="tipoPago === '100'"
+                 [class.border-light-subtle]="tipoPago !== '100'"
+                 (click)="tipoPago = '100'"
+                 style="cursor: pointer;">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="fw-bold text-dark fs-6">Pago Completo (100%)</span>
+                <input type="radio" name="tipoPago" [checked]="tipoPago === '100'" class="form-check-input border-success">
+              </div>
+              <p class="text-muted small mb-3">Cancela la totalidad del costo de la cancha ahora. Así, al llegar al complejo deportivo tú y tus amigos no tendrán ningún saldo pendiente por pagar.</p>
+              <div class="fs-4 fw-bold text-success">S/ {{ reserva.precioTotal | number:'1.2-2' }}</div>
+            </div>
+          </div>
+        </div>
 
+        <!-- RESUMEN EN GRANDE DEL MONTO A DEPOSITAR -->
+        <div class="info-box total-box bg-success bg-opacity-10 border border-2 border-success border-opacity-75 rounded-4 p-4 text-center w-100 mt-4 shadow-sm">
+          <span class="text-success-emphasis fw-bold d-block mb-1 text-uppercase letter-spacing-1" style="font-size: 0.85rem;">MONTO A DEPOSITAR AHORA POR TRANSFERENCIA</span>
+          <strong class="text-success fs-1 fw-extrabold d-block">
+            S/ {{ (tipoPago === '50' ? (reserva.precioTotal / 2) : reserva.precioTotal) | number:'1.2-2' }}
+          </strong>
+          <span class="text-muted small mt-1 d-block" style="font-size: 0.78rem;" *ngIf="tipoPago === '50'">
+            * Recuerda: El 50% restante (S/ {{ (reserva.precioTotal / 2) | number:'1.2-2' }}) se abona directamente en recepción el día del partido.
+          </span>
+          <span class="text-muted small mt-1 d-block" style="font-size: 0.78rem;" *ngIf="tipoPago === '100'">
+            * Has seleccionado liquidar el total de tu reserva. ¡Listo para jugar!
+          </span>
+        </div>
+      </div>
+
+      <div class="mensaje-reserva bg-light border p-3 rounded-3 mt-3 text-muted small">
+        <i class="bi bi-info-circle-fill text-success me-2"></i>
+        Tu reserva se encuentra registrada en <strong>espera de comprobante</strong>. Para confirmar tu horario, debes transferir la cantidad seleccionada de <strong>S/ {{ (tipoPago === '50' ? (reserva.precioTotal / 2) : reserva.precioTotal) | number:'1.2-2' }}</strong> directamente al dueño y enviarle el comprobante.
       </div>
 
     </div>
 
     <!-- PASOS -->
 
-    <h2 class="section-title">
-
-      ¿Cómo confirmar tu reserva?
-
+    <h2 class="section-title fw-bold my-4 text-center">
+      ¿Cómo confirmar tu reserva de cancha?
     </h2>
 
     <div class="pasos-grid">
 
       <div class="paso-card">
 
-        <div class="paso-numero">
+        <div class="paso-numero bg-success text-white">
           1
         </div>
 
-        <h3>Realiza el pago</h3>
+        <h3 class="fw-bold">Realiza la transferencia</h3>
 
-        <p>
-          Transfiere el monto total mediante
-          Yape o transferencia bancaria.
+        <p class="text-muted small">
+          Transfiere el monto seleccionado de <strong>S/ {{ (tipoPago === '50' ? (reserva.precioTotal / 2) : reserva.precioTotal) | number:'1.2-2' }}</strong> directamente al propietario mediante los métodos indicados abajo.
         </p>
 
       </div>
 
       <div class="paso-card">
 
-        <div class="paso-numero">
+        <div class="paso-numero bg-success text-white">
           2
         </div>
 
-        <h3>Envía el comprobante</h3>
+        <h3 class="fw-bold">Envía el comprobante</h3>
 
-        <p>
-          Envía una captura del pago al
-          WhatsApp del administrador.
+        <p class="text-muted small">
+          Presiona el botón de WhatsApp abajo para abrir un chat directo con el propietario del complejo con los datos de tu reserva ya cargados.
         </p>
 
       </div>
 
       <div class="paso-card">
 
-        <div class="paso-numero">
+        <div class="paso-numero bg-success text-white">
           3
         </div>
 
-        <h3>Reserva confirmada</h3>
+        <h3 class="fw-bold">¡Horario Confirmado!</h3>
 
-        <p>
-          Una vez validado el pago,
-          tu reserva quedará confirmada.
+        <p class="text-muted small">
+          El propietario validará el depósito en su cuenta y cambiará tu reserva a <strong>CONFIRMADA</strong>. El 50% restante lo liquidas en el local.
         </p>
 
       </div>
@@ -168,87 +246,78 @@
 
     <!-- METODOS -->
 
-    <h2 class="section-title">
-
-      Métodos de pago disponibles
-
+    <h2 class="section-title fw-bold my-4 text-center">
+      Métodos de cobro directo del propietario
     </h2>
 
-    <div class="metodos-grid">
+    <div class="row g-4 justify-content-center mb-5" *ngIf="reserva">
 
-      <div class="metodo-card yape">
-
-        <h3>Yape</h3>
-
-        <div class="dato">
-          Número:
-          <strong>987 654 321</strong>
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-success bg-opacity-10 border border-success border-opacity-25 h-100">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-success text-white p-2 rounded-3 me-3">
+              <i class="bi bi-qr-code fs-4"></i>
+            </div>
+            <h4 class="fw-bold mb-0 text-success-emphasis">Yape / Plin Directo</h4>
+          </div>
+          <p class="text-muted small">Escanea o envía tu adelanto al número registrado del complejo:</p>
+          <div class="alert bg-white border mb-0 py-2.5">
+            <div class="small text-muted">Datos de Pago:</div>
+            <div class="fs-5 fw-bold text-dark">{{ reserva.cancha.complejo ? reserva.cancha.complejo.yapePlinInfo : 'Coordinar con dueño al ' + reserva.cancha.complejo?.telefonoContacto }}</div>
+          </div>
         </div>
-
-        <div class="dato">
-          Titular:
-          <strong>PlayField SAC</strong>
-        </div>
-
       </div>
 
-      <div class="metodo-card bcp">
-
-        <h3>Banco BCP</h3>
-
-        <div class="dato">
-          Cuenta:
-          <strong>191-12345678-0-12</strong>
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-light h-100">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-secondary text-white p-2 rounded-3 me-3">
+              <i class="bi bi-person-fill fs-4"></i>
+            </div>
+            <h4 class="fw-bold mb-0 text-dark">Información del Propietario</h4>
+          </div>
+          <p class="text-muted small">Para consultas sobre cancelaciones, facturación o reservas adicionales:</p>
+          <div class="small">
+            <div class="mb-1"><strong>Complejo:</strong> {{ reserva.cancha.complejo ? reserva.cancha.complejo.nombre : 'Establecimiento' }}</div>
+            <div class="mb-1"><strong>WhatsApp de Soporte:</strong> {{ reserva.cancha.complejo ? reserva.cancha.complejo.telefonoContacto : '987654321' }}</div>
+            <div><strong>Ubicación:</strong> {{ reserva.cancha.complejo ? reserva.cancha.complejo.direccion : reserva.cancha.ubicacion }}</div>
+          </div>
         </div>
-
-        <div class="dato">
-          CCI:
-          <strong>
-            0021911234567801234
-          </strong>
-        </div>
-
       </div>
 
     </div>
 
     <!-- CONTACTO -->
 
-    <h2 class="section-title">
-
-      Envía tu comprobante
-
+    <h2 class="section-title fw-bold my-4 text-center">
+      Envía tu comprobante de pago
     </h2>
 
-    <div class="contacto-grid">
+    <div class="contacto-grid mb-5" *ngIf="reserva">
 
       <a
-        href="https://wa.me/51987654321"
+        [href]="obtenerEnlaceWhatsApp()"
         target="_blank"
-        class="contacto-card whatsapp">
+        class="contacto-card whatsapp bg-success text-white border-0 shadow-sm d-flex flex-column align-items-center justify-content-center py-4 rounded-4 transition-all">
 
-        <h3>WhatsApp</h3>
-
-        <p>+51 987 654 321</p>
-
-        <span>
-          Enviar comprobante →
+        <i class="bi bi-whatsapp fs-1 mb-2"></i>
+        <h3 class="fw-bold text-white mb-1">Enviar por WhatsApp</h3>
+        <p class="mb-3 opacity-75">+51 {{ reserva.cancha.complejo ? reserva.cancha.complejo.telefonoContacto : '987654321' }}</p>
+        <span class="btn btn-light btn-sm fw-bold text-success rounded-pill px-4">
+          Enviar comprobante ahora →
         </span>
 
       </a>
 
       <a
-        href="mailto:reservas@playfield.com"
-        class="contacto-card correo">
+        [href]="'mailto:' + (reserva.cancha.complejo?.propietario?.correo || 'reservas@playfield.com') + '?subject=Comprobante de Reserva - Cancha ' + reserva.cancha.nombre"
+        class="contacto-card correo border d-flex flex-column align-items-center justify-content-center py-4 rounded-4 bg-white transition-all">
 
-        <h3>Correo electrónico</h3>
-
-        <p>
-          reservas&#64;playfield.com
-        </p>
-
-        <span>
-          Enviar correo →
+        <i class="bi bi-envelope-open fs-1 text-primary mb-2"></i>
+        <h3 class="fw-bold mb-1">Enviar por Correo</h3>
+        <p class="text-muted mb-3">{{ reserva.cancha.complejo?.propietario?.correo || 'reservas@playfield.com' }}</p>
+        <span class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-4">
+          Enviar correo electrónico →
         </span>
 
       </a>
@@ -257,21 +326,21 @@
 
     <!-- IMPORTANTE -->
 
-    <div class="nota-importante">
+    <div class="nota-importante bg-danger-subtle border border-danger border-opacity-25 rounded-4 p-4 mb-5" *ngIf="reserva">
 
-      <h3>Importante</h3>
+      <h3 class="fw-bold text-danger-emphasis mb-2">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>Tolerancia de 15 Minutos y Cancelación
+      </h3>
 
-      <p>
-
-        Las reservas sin pago confirmado
-        pueden ser liberadas automáticamente.
-
-        Envía tu comprobante lo antes posible
-        para asegurar tu horario.
-
+      <p class="mb-0 text-danger-emphasis small">
+        De acuerdo con las reglas de negocio de la plataforma, las reservas sin adelanto del 50% verificado o en las que el jugador no se presente a la hora de juego programada serán <strong>liberadas de forma automática al transcurrir un máximo de 15 minutos de tolerancia</strong>. 
+        <br><br>
+        Si la reserva es liberada por inasistencia, el adelanto del 50% queda en posesión del complejo deportivo y el turno de la cancha volverá a figurar disponible al público en la web. Asegúrate de enviar tu comprobante a tiempo.
       </p>
 
     </div>
+
+    </ng-container>
 
   </div>
 

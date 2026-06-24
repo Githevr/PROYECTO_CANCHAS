@@ -30,6 +30,33 @@
     <!-- FORMULARIO -->
     <form (ngSubmit)="registrar()">
 
+      <!-- SELECCIÓN DE ROL -->
+      <div class="form-group mb-4">
+        <label class="d-block mb-2 text-center text-muted fw-semibold">¿Cómo usarás la plataforma?</label>
+        <div class="row g-2">
+          <div class="col-6">
+            <button type="button" 
+                    class="btn w-100 py-3 d-flex flex-column align-items-center justify-content-center border transition-all"
+                    [class.btn-success]="rol === 'JUGADOR'"
+                    [class.btn-light]="rol !== 'JUGADOR'"
+                    (click)="rol = 'JUGADOR'">
+              <i class="bi bi-person-fill fs-3 mb-1"></i>
+              <span class="fw-bold">Soy Jugador</span>
+            </button>
+          </div>
+          <div class="col-6">
+            <button type="button" 
+                    class="btn w-100 py-3 d-flex flex-column align-items-center justify-content-center border transition-all"
+                    [class.btn-success]="rol === 'PROPIETARIO'"
+                    [class.btn-light]="rol !== 'PROPIETARIO'"
+                    (click)="rol = 'PROPIETARIO'">
+              <i class="bi bi-building-fill fs-3 mb-1"></i>
+              <span class="fw-bold">Soy Dueño</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="form-group">
         <label>Nombre completo</label>
         <input

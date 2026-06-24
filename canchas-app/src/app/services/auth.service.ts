@@ -45,6 +45,14 @@ export class AuthService {
     );
   }
 
+  obtenerDatosCliente(id: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/${id}`);
+  }
+
+  reenviarCodigo(correo: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reenviar-codigo?correo=${encodeURIComponent(correo)}`, {});
+  }
+
   cerrarSesion(): void {
     localStorage.removeItem('cliente');
   }
@@ -61,5 +69,23 @@ export class AuthService {
 
   estaLogueado(): boolean {
     return localStorage.getItem('cliente') !== null;
+  }
+
+  obtenerRol(): string | null {
+    const usuario = this.obtenerUsuarioActual();
+    return usuario ? usuario.rol : null;
+  }
+
+  obtenerCreditos(): number {
+    const usuario = this.obtenerUsuarioActual();
+    return usuario && usuario.creditos ? Number(usuario.creditos) : 0.00;
+  }
+
+  actualizarCreditos(nuevosCreditos: number): void {
+    const usuario = this.obtenerUsuarioActual();
+    if (usuario) {
+      usuario.creditos = nuevosCreditos;
+      localStorage.setItem('cliente', JSON.stringify(usuario));
+    }
   }
 }

@@ -69,7 +69,11 @@ export class IniciarsesionComponent {
         this.tipoMensaje = 'exito';
 
         setTimeout(() => {
-          this.router.navigate(['/']);
+          if (response.rol === 'PROPIETARIO') {
+            this.router.navigate(['/propietario/dashboard']);
+          } else {
+            this.router.navigate(['/']);
+          }
         }, 1000);
       },
 

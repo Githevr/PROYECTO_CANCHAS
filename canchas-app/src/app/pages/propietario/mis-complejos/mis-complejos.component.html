@@ -1,0 +1,279 @@
+<app-navbar></app-navbar>
+
+<div class="container owner-container">
+  <!-- ENCABEZADO Y ACCIONES -->
+  <div class="row align-items-center mb-4 g-3">
+    <div class="col-md-8">
+      <div class="d-flex align-items-center mb-2">
+        <i class="bi bi-building text-success fs-2 me-3"></i>
+        <h1 class="h2 mb-0 fw-bold">Mis Complejos Deportivos</h1>
+      </div>
+      <p class="text-muted mb-0">Publica tus complejos deportivos, añade sus canchas y configura tus datos de contacto y cobro directo.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+      <button class="btn btn-success btn-lg fw-bold shadow-sm" (click)="toggleFormComplejo()">
+        <i class="bi" [class.bi-plus-circle]="!mostrarFormComplejo" [class.bi-x-circle]="mostrarFormComplejo"></i>
+        {{ mostrarFormComplejo ? 'Cancelar Registro' : 'Registrar Complejo' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- MENSAJES GENERALES -->
+  <div *ngIf="mensaje && complejoSeleccionadoParaCancha === null" class="alert p-3 rounded-3 mb-4" 
+       [class.alert-danger]="tipoMensaje === 'error'"
+       [class.alert-success]="tipoMensaje === 'exito'">
+    <i class="bi me-2" [class.bi-exclamation-triangle-fill]="tipoMensaje === 'error'" [class.bi-check-circle-fill]="tipoMensaje === 'exito'"></i>
+    {{ mensaje }}
+  </div>
+
+  <!-- =========================================================================
+       FORMULARIO: REGISTRAR COMPLEJO DEPORTIVO
+       ========================================================================= -->
+  <div class="card border-0 shadow-sm rounded-4 mb-5" *ngIf="mostrarFormComplejo">
+    <div class="card-body p-4">
+      <h4 class="fw-bold mb-4">Información del Nuevo Complejo Deportivo</h4>
+      <form (ngSubmit)="registrarComplejo()">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Nombre del Complejo *</label>
+            <input type="text" class="form-control" [(ngModel)]="nuevoComplejo.nombre" name="nombre" placeholder="Ej: Complejo Deportivo El Golazo" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Dirección Física *</label>
+            <input type="text" class="form-control" [(ngModel)]="nuevoComplejo.direccion" name="direccion" placeholder="Ej: Av. España 1542" required>
+          </div>
+          
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Ciudad / Provincia *</label>
+            <select class="form-select" [(ngModel)]="nuevoComplejo.ciudad" name="ciudad">
+              <option value="Trujillo">Trujillo</option>
+              <option value="Chiclayo">Chiclayo</option>
+              <option value="Piura">Piura</option>
+              <option value="Chimbote">Chimbote</option>
+              <option value="Lima">Lima</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Teléfono de Contacto (WhatsApp) *</label>
+            <input type="text" class="form-control" [(ngModel)]="nuevoComplejo.telefonoContacto" name="telefonoContacto" placeholder="Ej: 987654321" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Datos para Cobro de Garantía (Yape/Plin) *</label>
+            <input type="text" class="form-control" [(ngModel)]="nuevoComplejo.yapePlinInfo" name="yapePlinInfo" placeholder="Ej: Yape: 987654321 (Juan Perez)" required>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-semibold">Descripción del Complejo</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="nuevoComplejo.descripcion" name="descripcion" placeholder="Comentarios adicionales sobre el complejo, horarios especiales, etc."></textarea>
+          </div>
+
+          <!-- CHECKBOXES DE BENEFICIOS / COMODIDADES -->
+          <div class="col-12">
+            <label class="form-label fw-semibold d-block">Comodidades y Servicios Incluidos</label>
+            <div class="row g-2">
+              <div class="col-6 col-md-4 col-lg-2" *ngFor="let com of comodidades">
+                <div class="form-check p-2 rounded-3 border d-flex align-items-center bg-light">
+                  <input class="form-check-input ms-0 me-2" type="checkbox" [(ngModel)]="com.selected" [name]="com.name" [id]="com.name">
+                  <label class="form-check-label small fw-semibold" [for]="com.name">{{ com.name }}</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 mt-4 text-end">
+            <button type="button" class="btn btn-light fw-bold me-2" (click)="toggleFormComplejo()">Cancelar</button>
+            <button type="submit" class="btn btn-success fw-bold px-4 shadow-sm" [disabled]="cargando">
+              <span *ngIf="!cargando"><i class="bi bi-save me-2"></i> Guardar Complejo</span>
+              <span *ngIf="cargando" class="spinner-border spinner-border-sm me-2" role="status"></span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       LISTADO DE COMPLEJOS REGISTRADOS
+       ========================================================================= -->
+  <div class="row g-4" *ngIf="complejos.length > 0">
+    <div class="col-12" *ngFor="let comp of complejos">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
+        <div class="row g-0">
+          <!-- DETALLES DEL COMPLEJO -->
+          <div class="col-lg-4 bg-light p-4 border-end">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <h3 class="fw-bold text-success mb-0">{{ comp.nombre }}</h3>
+              <span class="badge bg-success text-white px-3 py-1 rounded-pill small fw-bold">
+                <i class="bi bi-star-fill me-1 small"></i> {{ comp.rating }}
+              </span>
+            </div>
+            
+            <div class="mb-3 small">
+              <div class="mb-2 text-dark">
+                <i class="bi bi-geo-alt-fill text-muted me-2"></i> <strong>Dirección:</strong> {{ comp.direccion }} ({{ comp.ciudad }})
+              </div>
+              <div class="mb-2 text-dark">
+                <i class="bi bi-whatsapp text-muted me-2"></i> <strong>WhatsApp Dueño:</strong> {{ comp.telefonoContacto }}
+              </div>
+              <div class="mb-2 text-dark">
+                <i class="bi bi-wallet2 text-muted me-2"></i> <strong>Pago Garantía:</strong> <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ comp.yapePlinInfo }}</span>
+              </div>
+            </div>
+
+            <p class="text-muted small mb-4" *ngIf="comp.descripcion">{{ comp.descripcion }}</p>
+
+            <!-- COMODIDADES EN PILLS -->
+            <div class="mb-4" *ngIf="comp.beneficios">
+              <h6 class="fw-bold small text-uppercase text-muted mb-2">Comodidades</h6>
+              <div class="d-flex flex-wrap gap-1">
+                <span class="badge bg-light text-dark border px-2 py-1.5 rounded-pill small" *ngFor="let ben of comp.beneficios.split(', ')">
+                  {{ ben }}
+                </span>
+              </div>
+            </div>
+
+            <!-- BOTÓN AÑADIR CANCHA -->
+            <button class="btn btn-outline-success w-100 fw-bold" 
+                    *ngIf="complejoSeleccionadoParaCancha !== comp.id" 
+                    (click)="abrirFormCancha(comp.id)">
+              <i class="bi bi-plus-lg me-2"></i> Registrar Cancha
+            </button>
+
+            <!-- SUB-FORMULARIO INLINE: AGREGAR CANCHA -->
+            <div class="card border border-success-subtle bg-success-subtle bg-opacity-10 p-3 rounded-3" *ngIf="complejoSeleccionadoParaCancha === comp.id">
+              <h6 class="fw-bold text-success mb-3"><i class="bi bi-plus-circle-fill me-2"></i>Nueva Cancha</h6>
+              
+              <div *ngIf="mensaje && complejoSeleccionadoParaCancha === comp.id" class="alert alert-danger p-2 rounded-2 small mb-3">
+                {{ mensaje }}
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label small fw-semibold">Nombre del Campo</label>
+                <input type="text" class="form-control form-control-sm" [(ngModel)]="nuevaCancha.nombre" placeholder="Ej: Campo Sintético 1">
+              </div>
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="form-label small fw-semibold">Precio por Hora</label>
+                  <input type="number" class="form-control form-control-sm" [(ngModel)]="nuevaCancha.precio">
+                </div>
+                <div class="col-6">
+                  <label class="form-label small fw-semibold">Deporte</label>
+                  <select class="form-select form-select-sm" [(ngModel)]="nuevaCancha.tipo">
+                    <option value="Fútbol">Fútbol</option>
+                    <option value="Básquet">Básquet</option>
+                    <option value="Voley">Voley</option>
+                    <option value="Tenis">Tenis</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- ZONA DE CARGA DE IMÁGENES DE CANCHA (Mín 1, Máx 3) -->
+              <div class="mb-3">
+                <label class="form-label small fw-semibold d-block">Fotos de la Cancha (Mín. 1, Máx. 3)</label>
+                
+                <!-- Cuadro interactivo de subida (activo si hay < 3 imágenes) -->
+                <div class="border-dashed rounded-3 p-3 text-center mb-2 position-relative" 
+                     *ngIf="imagenesCargadas.length < 3"
+                     style="cursor: pointer; background: #f8f9fa;">
+                  <input type="file" 
+                         class="position-absolute top-0 start-0 w-100 h-100 opacity-0" 
+                         style="cursor: pointer; z-index: 2;" 
+                         (change)="onArchivoSeleccionado($event)"
+                         [disabled]="subiendoImagen || cargando">
+                  <div class="d-flex flex-column align-items-center justify-content-center py-1" *ngIf="!subiendoImagen">
+                    <i class="bi bi-camera text-success fs-4 mb-1"></i>
+                    <span class="small fw-semibold text-dark">Subir Foto</span>
+                    <span class="text-muted" style="font-size: 0.7rem;">PNG o JPG (Máx 2MB)</span>
+                  </div>
+                  <div class="d-flex flex-column align-items-center justify-content-center py-1" *ngIf="subiendoImagen">
+                    <span class="spinner-border spinner-border-sm text-success mb-2" role="status"></span>
+                    <span class="small text-muted" style="font-size: 0.72rem;">Subiendo imagen...</span>
+                  </div>
+                </div>
+                
+                <!-- Lista de miniaturas cargadas -->
+                <div class="d-flex gap-2 flex-wrap mb-2" *ngIf="imagenesCargadas.length > 0">
+                  <div class="position-relative border rounded-3 overflow-hidden" 
+                       *ngFor="let imgUrl of imagenesCargadas; let idx = index" 
+                       style="width: 65px; height: 65px;">
+                    <img [src]="'http://localhost:8080' + imgUrl" 
+                         alt="Cancha" 
+                         class="w-100 h-100" 
+                         style="object-fit: cover;">
+                    <!-- Botón de eliminación unitaria -->
+                    <button type="button" 
+                            class="btn btn-danger btn-sm p-0 d-flex align-items-center justify-content-center rounded-circle position-absolute" 
+                            style="width: 18px; height: 18px; top: 3px; right: 3px; z-index: 3;" 
+                            (click)="eliminarImagenDeLista(idx)"
+                            [disabled]="subiendoImagen || cargando"
+                            title="Eliminar esta foto">
+                      <i class="bi bi-x fs-6"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Textos y alertas de validación de fotos -->
+                <div class="small text-muted mb-1" style="font-size: 0.72rem;" *ngIf="imagenesCargadas.length === 0">
+                  <i class="bi bi-info-circle me-1 text-warning"></i> Sube al menos 1 foto para registrar el campo.
+                </div>
+                <div class="small text-success fw-semibold" style="font-size: 0.72rem;" *ngIf="imagenesCargadas.length > 0 && imagenesCargadas.length < 3">
+                  <i class="bi bi-check-circle-fill me-1"></i> {{ imagenesCargadas.length }} de 3 fotos cargadas.
+                </div>
+                <div class="small text-danger fw-semibold" style="font-size: 0.72rem;" *ngIf="imagenesCargadas.length === 3">
+                  <i class="bi bi-exclamation-circle-fill me-1"></i> Límite de 3 fotos alcanzado.
+                </div>
+              </div>
+
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-light btn-sm w-50 fw-bold" (click)="cerrarFormCancha()" [disabled]="cargando || subiendoImagen">Cancelar</button>
+                <button type="button" class="btn btn-success btn-sm w-50 fw-bold" (click)="registrarCancha()" [disabled]="cargando || subiendoImagen || imagenesCargadas.length === 0">
+                  <span *ngIf="!cargando">Guardar</span>
+                  <span *ngIf="cargando" class="spinner-border spinner-border-sm"></span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- LISTA DE CANCHAS DEL COMPLEJO -->
+          <div class="col-lg-8 p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-grid-fill text-muted me-2"></i>Campos Deportivos Registrados</h5>
+            
+            <div class="row g-3" *ngIf="canchasPorComplejo[comp.id] && canchasPorComplejo[comp.id].length > 0">
+              <div class="col-md-6" *ngFor="let cancha of canchasPorComplejo[comp.id]">
+                <div class="card border border-light-subtle rounded-3 p-3 d-flex flex-row align-items-center">
+                  <img [src]="obtenerImagenUrl(cancha.imagen)" alt="Cancha" class="rounded-3 me-3" style="width: 70px; height: 70px; object-fit: cover;">
+                  <div class="flex-grow-1 min-w-0">
+                    <h6 class="fw-bold mb-1 text-truncate">{{ cancha.nombre }}</h6>
+                    <span class="badge bg-light text-muted border px-2 py-1 mb-0 me-2">{{ cancha.tipo }}</span>
+                    <span class="fw-bold text-success-emphasis" style="font-size: 0.95rem;">S/ {{ cancha.precio | number:'1.2-2' }} / h</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SIN CANCHAS -->
+            <div class="text-center py-5 text-muted" *ngIf="!canchasPorComplejo[comp.id] || canchasPorComplejo[comp.id].length === 0">
+              <i class="bi bi-grid-3x3 fs-1 d-block mb-2"></i>
+              No has agregado campos de juego a este complejo aún.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIN COMPLEJOS REGISTRADOS -->
+  <div class="row py-5" *ngIf="complejos.length === 0 && !mostrarFormComplejo">
+    <div class="col-12 text-center text-muted">
+      <i class="bi bi-building-x display-1 d-block mb-3"></i>
+      <h3 class="fw-bold">No tienes complejos registrados</h3>
+      <p class="mb-4">Para poder recibir reservas y figurar en la web, debes registrar al menos un complejo deportivo y añadir sus canchas.</p>
+      <button class="btn btn-success btn-lg fw-bold shadow-sm px-4" (click)="toggleFormComplejo()">
+        <i class="bi bi-plus-circle me-2"></i> Registrar Mi Primer Complejo
+      </button>
+    </div>
+  </div>
+
+</div>

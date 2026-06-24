@@ -29,29 +29,48 @@
 
       <ul class="navbar-nav mx-auto">
 
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-            Inicio
-          </a>
-        </li>
+        <!-- MENÚ JUGADOR / VISITANTE -->
+        <ng-container *ngIf="authService.obtenerRol() !== 'PROPIETARIO'">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+              Inicio
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/reservar" routerLinkActive="active">
+              Canchas
+            </a>
+          </li>
+          <li class="nav-item" *ngIf="authService.estaLogueado()">
+            <a class="nav-link" routerLink="/misreservas" routerLinkActive="active">
+              Mis reservas
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/contacto" routerLinkActive="active">
+              Contacto
+            </a>
+          </li>
+        </ng-container>
 
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/reservar" routerLinkActive="active">
-            Canchas
-          </a>
-        </li>
-
-        <li class="nav-item" *ngIf="authService.estaLogueado()">
-          <a class="nav-link" routerLink="/misreservas" routerLinkActive="active">
-            Mis reservas
-          </a>
-        </li>
-
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/contacto" routerLinkActive="active">
-            Contacto
-          </a>
-        </li>
+        <!-- MENÚ PROPIETARIO ("SOY DUEÑO") -->
+        <ng-container *ngIf="authService.obtenerRol() === 'PROPIETARIO'">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/propietario/dashboard" routerLinkActive="active">
+              Panel de Control
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/propietario/mis-complejos" routerLinkActive="active">
+              Mis Complejos
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/propietario/mis-creditos" routerLinkActive="active">
+              Mis Créditos
+            </a>
+          </li>
+        </ng-container>
 
       </ul>
 
@@ -83,8 +102,17 @@
 
       <!-- ACTIONS - LOGUEADO -->
       <div
-        class="navbar-actions"
+        class="navbar-actions align-items-center"
         *ngIf="authService.estaLogueado()">
+
+        <!-- BILLETERA DE CRÉDITOS (Exclusivo Propietario) -->
+        <div class="me-3 px-3 py-1.5 rounded-pill border d-flex align-items-center bg-success-subtle text-success border-success" 
+             *ngIf="authService.obtenerRol() === 'PROPIETARIO'"
+             style="font-size: 0.9rem; cursor: pointer;"
+             routerLink="/propietario/mis-creditos">
+          <i class="bi bi-wallet2 me-2 fs-6"></i>
+          <span class="fw-bold">Créditos: S/ {{ authService.obtenerCreditos() | number:'1.2-2' }}</span>
+        </div>
 
         <div class="user-info">
 
@@ -98,7 +126,7 @@
 
         </div>
 
-        <button class="btn-logout" (click)="cerrarSesion()">
+        <button class="btn-logout ms-2" (click)="cerrarSesion()">
           Cerrar sesión
         </button>
 
