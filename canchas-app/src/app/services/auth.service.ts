@@ -1,57 +1,55 @@
 import { Injectable } from '@angular/core';
-
-import { Usuario } from '../model/usuario.model';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
-
 export class AuthService {
 
-  private usuarios: Usuario[] = [];
+  private apiUrl = 'http://localhost:8080/clientes';
 
-  private usuarioActual: Usuario | null = null;
+  constructor(
+    private http: HttpClient
+  ) {}
 
-  registrar(usuario: Usuario): boolean {
+  login(
+    correo: string,
+    password: string
+  ): Observable<any> {
 
-    const existe = this.usuarios.find(
-      u => u.email === usuario.email
+    return this.http.post(
+      `${this.apiUrl}/login`,
+      {
+        correo,
+        password
+      }
     );
-
-    if (existe) {
-      return false;
-    }
-
-    this.usuarios.push(usuario);
-    return true;
-
   }
 
-  iniciarSesion(email: string, password: string): boolean {
+  registrar(usuario: any): Observable<any> {
 
-    const usuario = this.usuarios.find(
-      u => u.email === email && u.password === password
+    return this.http.post(
+      this.apiUrl,
+      usuario
     );
-
-    if (usuario) {
-      this.usuarioActual = usuario;
-      return true;
-    }
-
-    return false;
-
   }
 
   cerrarSesion(): void {
-    this.usuarioActual = null;
+    localStorage.removeItem('cliente');
   }
 
-  obtenerUsuarioActual(): Usuario | null {
-    return this.usuarioActual;
+  obtenerUsuarioActual(): any {
+
+    const usuario =
+      localStorage.getItem('cliente');
+
+    return usuario
+      ? JSON.parse(usuario)
+      : null;
   }
 
   estaLogueado(): boolean {
-    return this.usuarioActual !== null;
+    return localStorage.getItem('cliente') !== null;
   }
-
 }

@@ -6,6 +6,7 @@ import { IniciarsesionComponent } from './pages/iniciarsesion/iniciarsesion.comp
 import { RegistrarComponent } from './pages/registrar/registrar.component';
 import { MisreservasComponent } from './pages/misreservas/misreservas.component';
 import { ContactoComponent } from './pages/contacto/contacto.component';
+import { RealizarPagoComponent } from './pages/realizar-pago/realizar-pago.component';
 
 export const routes: Routes = [
 
@@ -42,6 +43,11 @@ export const routes: Routes = [
   {
     path: 'contacto',
     component: ContactoComponent
+  },
+  {
+    path: 'realizar-pago/:id',
+    component: RealizarPagoComponent
   }
+
 
 ];

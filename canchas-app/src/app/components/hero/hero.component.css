@@ -245,3 +245,25 @@
 
   fill: #4da629;
 }
+.hero-select {
+    width: 180px;
+    border: none;
+    background: transparent;
+    outline: none;
+
+    font-size: 16px;
+    font-weight: 600;
+
+    color: #111827 !important;
+
+    display: block;
+    height: 30px;
+    line-height: 30px;
+
+    cursor: pointer;
+}
+
+.hero-select option {
+    color: #111827;
+    background: white;
+}

@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 public interface ReservaRepository
         extends JpaRepository<Reserva, Long> {
@@ -14,4 +15,10 @@ public interface ReservaRepository
             LocalDate fecha,
             LocalTime horaInicio
     );
+
+    List<Reserva> findByCanchaIdAndFecha(
+            Long canchaId,
+            LocalDate fecha
+    );
+    List<Reserva> findByClienteId(Long clienteId);
 }

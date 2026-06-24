@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { AuthService } from '../../services/auth.service';
@@ -20,147 +20,307 @@ import { ReservaService, CanchaLocal } from '../../services/reserva.service';
   templateUrl: './reservar.component.html',
   styleUrl: './reservar.component.css'
 })
-
 export class ReservarComponent implements OnInit {
 
   canchas: CanchaLocal[] = [];
 
-  // Filtros
+  // FILTROS
   fechaSeleccionada: string = '';
   precioMaximo: number = 0;
 
-  // Selección
+  ubicacionSeleccionada: string = '';
+  deporteSeleccionado: string = '';
+  horaFiltro: string = '';
+
+  // SELECCIÓN
   canchaSeleccionada: CanchaLocal | null = null;
   horariosDisponibles: string[] = [];
   horaSeleccionada: string = '';
 
-  // Mensaje
+  // MENSAJE
   mensaje: string = '';
   tipoMensaje: string = '';
 
   constructor(
     private authService: AuthService,
     private reservaService: ReservaService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    this.canchas = this.reservaService.getCanchas();
 
-    // Fecha mínima: hoy
+    this.reservaService
+  .getCanchas()
+  .subscribe({
+    next: (data) => {
+      this.canchas = data;
+    },
+    error: () => {
+      this.mensaje = 'Error cargando canchas';
+      this.tipoMensaje = 'error';
+    }
+  });
+
     const hoy = new Date();
     const anio = hoy.getFullYear();
     const mes = String(hoy.getMonth() + 1).padStart(2, '0');
     const dia = String(hoy.getDate()).padStart(2, '0');
+
     this.fechaSeleccionada = `${anio}-${mes}-${dia}`;
+
+    this.route.queryParams.subscribe(params => {
+
+      this.ubicacionSeleccionada =
+        params['ubicacion'] || '';
+
+      this.deporteSeleccionado =
+        params['deporte'] || '';
+
+      this.fechaSeleccionada =
+        params['fecha'] || this.fechaSeleccionada;
+
+      this.horaFiltro =
+        params['hora'] || '';
+
+    });
 
     this.actualizarDisponibilidad();
   }
 
   get canchasFiltradas(): CanchaLocal[] {
 
-    let resultado = this.canchas;
+  let resultado = [...this.canchas];
 
-    if (this.precioMaximo > 0) {
-      resultado = resultado.filter(c => c.precio <= this.precioMaximo);
-    }
+  // FILTRO POR PRECIO
+  if (this.precioMaximo > 0) {
+    resultado = resultado.filter(
+      c => c.precio <= this.precioMaximo
+    );
+  }
 
-    return resultado;
+  // FILTRO POR DEPORTE
+  if (
+    this.deporteSeleccionado &&
+    this.deporteSeleccionado !== 'Todos'
+  ) {
+
+    resultado = resultado.filter(
+      c =>
+        c.tipo.toLowerCase() ===
+        this.deporteSeleccionado.toLowerCase()
+    );
 
   }
+
+  // FILTRO POR UBICACION
+  if (
+    this.ubicacionSeleccionada &&
+    this.ubicacionSeleccionada !== 'Todos'
+  ) {
+
+    resultado = resultado.filter(
+      c =>
+        c.ubicacion
+          .toLowerCase()
+          .includes(
+            this.ubicacionSeleccionada.toLowerCase()
+          )
+    );
+
+  }
+
+  return resultado;
+
+}
 
   seleccionarCancha(cancha: CanchaLocal) {
 
     this.canchaSeleccionada = cancha;
     this.horaSeleccionada = '';
     this.mensaje = '';
-    this.actualizarDisponibilidad();
 
+    this.actualizarDisponibilidad();
   }
 
   actualizarDisponibilidad() {
 
-    if (this.canchaSeleccionada && this.fechaSeleccionada) {
-      this.horariosDisponibles = this.reservaService.getHorariosDisponibles(
+  if (
+    this.canchaSeleccionada &&
+    this.fechaSeleccionada
+  ) {
+
+    this.reservaService
+      .getHorariosDisponibles(
         this.canchaSeleccionada.id,
         this.fechaSeleccionada
-      );
-      // Si la hora seleccionada ya no está disponible, resetear
-      if (!this.horariosDisponibles.includes(this.horaSeleccionada)) {
-        this.horaSeleccionada = '';
-      }
-    }
+      )
+      .subscribe({
+
+        next: (horarios) => {
+
+          this.horariosDisponibles =
+            horarios;
+
+          if (
+            !this.horariosDisponibles.includes(
+              this.horaSeleccionada
+            )
+          ) {
+            this.horaSeleccionada = '';
+          }
+
+        },
+
+        error: () => {
+
+          this.horariosDisponibles = [];
+
+        }
+
+      });
 
   }
 
+}
+
   onFechaChange() {
+
     this.horaSeleccionada = '';
+
     this.actualizarDisponibilidad();
   }
 
   seleccionarHora(hora: string) {
+
     this.horaSeleccionada = hora;
     this.mensaje = '';
   }
+  calcularHoraFin(
+  horaInicio: string
+): string {
+
+  const hora =
+    Number(
+      horaInicio.split(':')[0]
+    );
+
+  const siguienteHora =
+    hora + 1;
+
+  return `${siguienteHora
+    .toString()
+    .padStart(2, '0')}:00`;
+
+}
 
   confirmarReserva() {
 
-    const usuario = this.authService.obtenerUsuarioActual();
+  const usuario =
+    this.authService.obtenerUsuarioActual();
 
-    if (!usuario) {
-      this.mensaje = 'Debes iniciar sesión para reservar.';
-      this.tipoMensaje = 'error';
-      return;
-    }
+  if (!usuario) {
 
-    if (!this.canchaSeleccionada) {
-      this.mensaje = 'Selecciona una cancha.';
-      this.tipoMensaje = 'error';
-      return;
-    }
+    this.mensaje =
+      'Debes iniciar sesión para reservar.';
 
-    if (!this.fechaSeleccionada) {
-      this.mensaje = 'Selecciona una fecha.';
-      this.tipoMensaje = 'error';
-      return;
-    }
+    this.tipoMensaje = 'error';
+    return;
+  }
 
-    if (!this.horaSeleccionada) {
-      this.mensaje = 'Selecciona un horario disponible.';
-      this.tipoMensaje = 'error';
-      return;
-    }
+  if (!this.canchaSeleccionada) {
 
-    // Verificar disponibilidad en tiempo real
-    if (this.reservaService.estaOcupado(
+    this.mensaje =
+      'Selecciona una cancha.';
+
+    this.tipoMensaje = 'error';
+    return;
+  }
+
+  if (!this.fechaSeleccionada) {
+
+    this.mensaje =
+      'Selecciona una fecha.';
+
+    this.tipoMensaje = 'error';
+    return;
+  }
+
+  if (!this.horaSeleccionada) {
+
+    this.mensaje =
+      'Selecciona un horario disponible.';
+
+    this.tipoMensaje = 'error';
+    return;
+  }
+
+  const reservaRequest = {
+
+    clienteId: usuario.id,
+
+    canchaId:
       this.canchaSeleccionada.id,
-      this.fechaSeleccionada,
-      this.horaSeleccionada
-    )) {
-      this.mensaje = 'Este horario acaba de ser reservado. Selecciona otro.';
-      this.tipoMensaje = 'error';
-      this.actualizarDisponibilidad();
-      return;
-    }
 
-    // Registrar reserva
-    this.reservaService.registrarReserva({
-      canchaId: this.canchaSeleccionada.id,
-      canchaName: this.canchaSeleccionada.nombre,
-      canchaImagen: this.canchaSeleccionada.imagen,
-      fecha: this.fechaSeleccionada,
-      hora: this.horaSeleccionada,
-      precio: this.canchaSeleccionada.precio,
-      usuarioEmail: usuario.email
+    fecha:
+      this.fechaSeleccionada,
+
+    horaInicio:
+      this.horaSeleccionada,
+
+    horaFin:
+      this.calcularHoraFin(
+        this.horaSeleccionada
+      ),
+
+    monto:
+      this.canchaSeleccionada.precio,
+
+    metodoPago:
+      'YAPE'
+
+  };
+
+  this.reservaService
+    .registrarReserva(
+      reservaRequest
+    )
+    .subscribe({
+
+      next: (reserva) => {
+
+        this.mensaje =
+          '¡Reserva registrada exitosamente!';
+
+        this.tipoMensaje =
+          'exito';
+
+        this.actualizarDisponibilidad();
+
+        setTimeout(() => {
+
+          this.router.navigate([
+          '/realizar-pago',
+          reserva.id
+        ]);
+
+        }, 1500);
+
+      },
+
+      error: (error) => {
+
+        this.mensaje =
+          error.error?.message ||
+          'Horario ocupado o error al reservar.';
+
+        this.tipoMensaje =
+          'error';
+
+      }
+
     });
 
-    this.mensaje = '¡Reserva registrada exitosamente! Redirigiendo a contacto...';
-    this.tipoMensaje = 'exito';
-
-    setTimeout(() => {
-      this.router.navigate(['/contacto']);
-    }, 1500);
-
-  }
+}
 
 }

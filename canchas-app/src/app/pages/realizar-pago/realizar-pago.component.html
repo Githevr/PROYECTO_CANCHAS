@@ -1,0 +1,278 @@
+<app-navbar></app-navbar>
+
+<div class="pago-container">
+
+  <div class="container">
+
+    <div class="page-header">
+
+      <h1>
+        Realizar <span>Pago</span>
+      </h1>
+
+      <p>
+        Completa tu pago para confirmar tu reserva
+      </p>
+
+    </div>
+
+    <div
+      class="resumen-card"
+      *ngIf="reserva">
+
+      <div class="resumen-header">
+
+        <h2>Resumen de tu reserva</h2>
+
+        <span class="badge-pendiente">
+          Pendiente de pago
+        </span>
+
+      </div>
+
+      <div class="resumen-grid">
+
+        <!-- IMAGEN -->
+        <div class="cancha-imagen">
+
+          <img
+            [src]="reserva.cancha.imagen"
+            [alt]="reserva.cancha.nombre">
+
+        </div>
+
+        <!-- DATOS -->
+        <div class="cancha-info">
+
+          <h3>
+            {{ reserva.cancha.nombre }}
+          </h3>
+
+          <p>
+            📍 {{ reserva.cancha.ubicacion }}
+          </p>
+
+          <p>
+            ⚽ {{ reserva.cancha.tipo }}
+          </p>
+
+          <p>
+            ⭐ {{ reserva.cancha.rating }}
+          </p>
+
+        </div>
+
+        <!-- FECHA -->
+        <div class="info-box">
+
+          <span>Fecha</span>
+
+          <strong>
+            {{ reserva.fecha }}
+          </strong>
+
+        </div>
+
+        <!-- HORARIO -->
+        <div class="info-box">
+
+          <span>Horario</span>
+
+          <strong>
+            {{ reserva.horaInicio }}
+            -
+            {{ reserva.horaFin }}
+          </strong>
+
+        </div>
+
+        <!-- PRECIO -->
+        <div class="info-box total-box">
+
+          <span>Total a pagar</span>
+
+          <strong>
+            S/{{ reserva.cancha.precio }}
+          </strong>
+
+        </div>
+
+      </div>
+
+      <div class="mensaje-reserva">
+
+        Tu reserva fue registrada correctamente.
+        Realiza el pago y envía el comprobante
+        para confirmar tu horario.
+
+      </div>
+
+    </div>
+
+    <!-- PASOS -->
+
+    <h2 class="section-title">
+
+      ¿Cómo confirmar tu reserva?
+
+    </h2>
+
+    <div class="pasos-grid">
+
+      <div class="paso-card">
+
+        <div class="paso-numero">
+          1
+        </div>
+
+        <h3>Realiza el pago</h3>
+
+        <p>
+          Transfiere el monto total mediante
+          Yape o transferencia bancaria.
+        </p>
+
+      </div>
+
+      <div class="paso-card">
+
+        <div class="paso-numero">
+          2
+        </div>
+
+        <h3>Envía el comprobante</h3>
+
+        <p>
+          Envía una captura del pago al
+          WhatsApp del administrador.
+        </p>
+
+      </div>
+
+      <div class="paso-card">
+
+        <div class="paso-numero">
+          3
+        </div>
+
+        <h3>Reserva confirmada</h3>
+
+        <p>
+          Una vez validado el pago,
+          tu reserva quedará confirmada.
+        </p>
+
+      </div>
+
+    </div>
+
+    <!-- METODOS -->
+
+    <h2 class="section-title">
+
+      Métodos de pago disponibles
+
+    </h2>
+
+    <div class="metodos-grid">
+
+      <div class="metodo-card yape">
+
+        <h3>Yape</h3>
+
+        <div class="dato">
+          Número:
+          <strong>987 654 321</strong>
+        </div>
+
+        <div class="dato">
+          Titular:
+          <strong>PlayField SAC</strong>
+        </div>
+
+      </div>
+
+      <div class="metodo-card bcp">
+
+        <h3>Banco BCP</h3>
+
+        <div class="dato">
+          Cuenta:
+          <strong>191-12345678-0-12</strong>
+        </div>
+
+        <div class="dato">
+          CCI:
+          <strong>
+            0021911234567801234
+          </strong>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- CONTACTO -->
+
+    <h2 class="section-title">
+
+      Envía tu comprobante
+
+    </h2>
+
+    <div class="contacto-grid">
+
+      <a
+        href="https://wa.me/51987654321"
+        target="_blank"
+        class="contacto-card whatsapp">
+
+        <h3>WhatsApp</h3>
+
+        <p>+51 987 654 321</p>
+
+        <span>
+          Enviar comprobante →
+        </span>
+
+      </a>
+
+      <a
+        href="mailto:reservas@playfield.com"
+        class="contacto-card correo">
+
+        <h3>Correo electrónico</h3>
+
+        <p>
+          reservas&#64;playfield.com
+        </p>
+
+        <span>
+          Enviar correo →
+        </span>
+
+      </a>
+
+    </div>
+
+    <!-- IMPORTANTE -->
+
+    <div class="nota-importante">
+
+      <h3>Importante</h3>
+
+      <p>
+
+        Las reservas sin pago confirmado
+        pueden ser liberadas automáticamente.
+
+        Envía tu comprobante lo antes posible
+        para asegurar tu horario.
+
+      </p>
+
+    </div>
+
+  </div>
+
+</div>

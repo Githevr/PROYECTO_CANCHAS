@@ -20,7 +20,6 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './iniciarsesion.component.html',
   styleUrl: './iniciarsesion.component.css'
 })
-
 export class IniciarsesionComponent {
 
   email: string = '';
@@ -37,29 +36,46 @@ export class IniciarsesionComponent {
   iniciarSesion() {
 
     if (!this.email || !this.password) {
-      this.mensaje = 'Por favor, completa todos los campos.';
+
+      this.mensaje =
+        'Por favor, completa todos los campos.';
+
       this.tipoMensaje = 'error';
       return;
     }
 
-    const resultado = this.authService.iniciarSesion(
+    this.authService.login(
       this.email,
       this.password
-    );
+    ).subscribe({
 
-    if (resultado) {
-      this.mensaje = '¡Bienvenido de vuelta! Redirigiendo...';
-      this.tipoMensaje = 'exito';
+      next: (response) => {
 
-      setTimeout(() => {
-        this.router.navigate(['/']);
-      }, 1200);
+        localStorage.setItem(
+          'cliente',
+          JSON.stringify(response)
+        );
 
-    } else {
-      this.mensaje = 'Correo o contraseña incorrectos.';
-      this.tipoMensaje = 'error';
-    }
+        this.mensaje =
+          '¡Bienvenido de vuelta!';
 
+        this.tipoMensaje = 'exito';
+
+        setTimeout(() => {
+          this.router.navigate(['/']);
+        }, 1000);
+      },
+
+      error: (error) => {
+
+        console.error(error);
+
+        this.mensaje =
+          'Correo o contraseña incorrectos.';
+
+        this.tipoMensaje = 'error';
+      }
+    });
   }
 
 }

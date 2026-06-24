@@ -4,10 +4,38 @@
 
   <div class="container">
 
-    <!-- HEADER -->
-    <div class="page-header">
+    <!-- HERO -->
+    <div class="hero-reserva">
 
       <h1>Reservar Cancha</h1>
+
+      <div class="filtros-activos">
+
+        <span
+          class="chip"
+          *ngIf="ubicacionSeleccionada">
+
+          📍 {{ ubicacionSeleccionada }}
+
+        </span>
+
+        <span
+          class="chip"
+          *ngIf="deporteSeleccionado">
+
+          ⚽ {{ deporteSeleccionado }}
+
+        </span>
+
+        <span
+          class="chip"
+          *ngIf="fechaSeleccionada">
+
+          📅 {{ fechaSeleccionada }}
+
+        </span>
+
+      </div>
 
       <p>
         Selecciona una cancha, elige fecha y horario disponible
@@ -15,20 +43,25 @@
 
     </div>
 
-    <!-- FILTROS -->
-    <div class="filtros-section">
+    <!-- BUSCADOR -->
+    <div class="buscador-card">
 
       <div class="filtro-item">
+
         <label>Fecha</label>
+
         <input
           type="date"
           [(ngModel)]="fechaSeleccionada"
           (change)="onFechaChange()"
           class="filtro-input">
+
       </div>
 
       <div class="filtro-item">
+
         <label>Precio máximo (S/)</label>
+
         <select
           [(ngModel)]="precioMaximo"
           class="filtro-input">
@@ -40,20 +73,40 @@
           <option [value]="100">Hasta S/100</option>
 
         </select>
+
       </div>
+
+      <button class="btn-buscar">
+
+        Buscar canchas
+
+      </button>
 
     </div>
 
-    <!-- MENSAJE -->
+    <!-- MENSAJES -->
     <div
       *ngIf="mensaje"
       class="reservar-mensaje"
       [class.mensaje-error]="tipoMensaje === 'error'"
       [class.mensaje-exito]="tipoMensaje === 'exito'">
+
       {{ mensaje }}
+
     </div>
 
-    <!-- CANCHAS GRID -->
+    <!-- TITULO SECCION -->
+    <div class="section-title">
+
+      <h2>Canchas disponibles</h2>
+
+      <span>
+        {{ canchasFiltradas.length }} resultados
+      </span>
+
+    </div>
+
+    <!-- GRID -->
     <div class="canchas-grid">
 
       <div
@@ -62,46 +115,70 @@
         [class.cancha-activa]="canchaSeleccionada?.id === cancha.id"
         (click)="seleccionarCancha(cancha)">
 
-        <!-- IMAGEN -->
         <div class="card-imagen">
+
           <img
             [src]="cancha.imagen"
             [alt]="cancha.nombre">
+
+          <span class="tipo-badge">
+            {{ cancha.tipo }}
+          </span>
 
           <div
             class="seleccion-overlay"
             *ngIf="canchaSeleccionada?.id === cancha.id">
 
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-              <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/>
-            </svg>
+            ✓
 
           </div>
 
-          <span class="tipo-badge">
-            {{ cancha.tipo }}
-          </span>
         </div>
 
-        <!-- CONTENIDO -->
         <div class="card-contenido">
 
           <div class="card-nombre-row">
+
             <h3>{{ cancha.nombre }}</h3>
-            <span class="card-rating">⭐ {{ cancha.rating }}</span>
+
+            <span class="card-rating">
+              ⭐ {{ cancha.rating }}
+            </span>
+
           </div>
 
           <p class="card-ubicacion">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" class="ub-icon">
+
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 640 640"
+              class="ub-icon">
+
               <path d="M128 252.6C128 148.4 214 64 320 64C426 64 512 148.4 512 252.6C512 371.9 391.8 514.9 341.6 569.4C329.8 582.2 310.1 582.2 298.3 569.4C248.1 514.9 127.9 371.9 127.9 252.6zM320 320C355.3 320 384 291.3 384 256C384 220.7 355.3 192 320 192C284.7 192 256 220.7 256 256C256 291.3 284.7 320 320 320z"/>
+
             </svg>
+
             {{ cancha.ubicacion }}
+
           </p>
 
           <div class="card-precio">
-            <span class="precio-valor">S/{{ cancha.precio }}</span>
-            <span class="precio-hora">/hora</span>
+
+            <span class="precio-valor">
+              S/{{ cancha.precio }}
+            </span>
+
+            <span class="precio-hora">
+              /hora
+            </span>
+
           </div>
+
+          <button class="btn-detalles">
+
+            Ver detalles
+
+          </button>
 
         </div>
 
@@ -109,17 +186,21 @@
 
     </div>
 
-    <!-- PANEL DE RESERVA -->
+    <!-- PANEL RESERVA -->
     <div
       class="reserva-panel"
       *ngIf="canchaSeleccionada">
 
       <div class="panel-header">
 
-        <h2>Selecciona un horario</h2>
+        <h2>
+          Reserva tu cancha
+        </h2>
 
         <p>
-          {{ canchaSeleccionada.nombre }} — {{ fechaSeleccionada }}
+
+          {{ canchaSeleccionada.nombre }}
+
         </p>
 
       </div>
@@ -141,11 +222,12 @@
 
       </div>
 
+      <!-- SIN HORARIOS -->
       <div
         class="sin-horarios"
         *ngIf="horariosDisponibles.length === 0">
 
-        <p>No hay horarios disponibles para esta fecha. Intenta con otra fecha.</p>
+        No hay horarios disponibles.
 
       </div>
 
@@ -154,39 +236,92 @@
         class="resumen-reserva"
         *ngIf="horaSeleccionada">
 
-        <div class="resumen-header">
-          <h3>Resumen de tu reserva</h3>
+        <h3>
+          Resumen de reserva
+        </h3>
+
+        <div class="resumen-item">
+
+          <span>Cancha</span>
+
+          <strong>
+            {{ canchaSeleccionada.nombre }}
+          </strong>
+
         </div>
 
-        <div class="resumen-detalle">
+        <div class="resumen-item">
 
-          <div class="resumen-item">
-            <span class="resumen-label">Cancha</span>
-            <span class="resumen-valor">{{ canchaSeleccionada.nombre }}</span>
-          </div>
+          <span>Fecha</span>
 
-          <div class="resumen-item">
-            <span class="resumen-label">Fecha</span>
-            <span class="resumen-valor">{{ fechaSeleccionada }}</span>
-          </div>
+          <strong>
+            {{ fechaSeleccionada }}
+          </strong>
 
-          <div class="resumen-item">
-            <span class="resumen-label">Horario</span>
-            <span class="resumen-valor">{{ horaSeleccionada }}</span>
-          </div>
+        </div>
 
-          <div class="resumen-item resumen-total">
-            <span class="resumen-label">Total</span>
-            <span class="resumen-valor precio-total">S/{{ canchaSeleccionada.precio }}</span>
-          </div>
+        <div class="resumen-item">
+
+          <span>Horario</span>
+
+          <strong>
+            {{ horaSeleccionada }}
+          </strong>
+
+        </div>
+
+        <div class="resumen-item resumen-total">
+
+          <span>Total</span>
+
+          <strong class="precio-total">
+
+            S/{{ canchaSeleccionada.precio }}
+
+          </strong>
 
         </div>
 
         <button
           class="btn-confirmar"
           (click)="confirmarReserva()">
+
           Confirmar Reserva
+
         </button>
+
+      </div>
+
+    </div>
+
+    <!-- BENEFICIOS -->
+    <div class="beneficios-section">
+
+      <div class="beneficio">
+
+        <h4>⚡ Reserva rápida</h4>
+        <p>En pocos pasos</p>
+
+      </div>
+
+      <div class="beneficio">
+
+        <h4>💰 Mejores precios</h4>
+        <p>Calidad al mejor precio</p>
+
+      </div>
+
+      <div class="beneficio">
+
+        <h4>🔒 Pago seguro</h4>
+        <p>Transacciones protegidas</p>
+
+      </div>
+
+      <div class="beneficio">
+
+        <h4>🎧 Soporte 24/7</h4>
+        <p>Estamos para ayudarte</p>
 
       </div>
 

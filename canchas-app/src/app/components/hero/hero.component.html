@@ -77,33 +77,49 @@
     </div>
 
     <!-- SEARCH BOX -->
-    <div class="search-banner">
+    <!-- SEARCH BOX -->
+<div class="search-banner">
 
-    <!-- UBICACION -->
-    <div class="search-item">
+  <!-- UBICACION -->
+  <div class="search-item">
 
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 640 640"
-            class="search-svg-icon">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 640 640"
+      class="search-svg-icon">
 
-            <path d="M128 252.6C128 148.4 214 64 320 64C426 64 512 148.4 512 252.6C512 371.9 391.8 514.9 341.6 569.4C329.8 582.2 310.1 582.2 298.3 569.4C248.1 514.9 127.9 371.9 127.9 252.6zM320 320C355.3 320 384 291.3 384 256C384 220.7 355.3 192 320 192C284.7 192 256 220.7 256 256C256 291.3 284.7 320 320 320z"/>
+      <path d="M128 252.6C128 148.4 214 64 320 64C426 64 512 148.4 512 252.6C512 371.9 391.8 514.9 341.6 569.4C329.8 582.2 310.1 582.2 298.3 569.4C248.1 514.9 127.9 371.9 127.9 252.6zM320 320C355.3 320 384 291.3 384 256C384 220.7 355.3 192 320 192C284.7 192 256 220.7 256 256C256 291.3 284.7 320 320 320z"/>
 
-        </svg>
+    </svg>
 
-        <a [href]="mapUrl" target="_blank" class="search-item" style="text-decoration: none; color: inherit; cursor: pointer;">
-            <div>
-                <span class="search-label">Ubicación</span>
-                <p>{{ nombreUbicacion }}</p>
-            </div>
-        </a>
+    <div>
+
+      <span class="search-label">
+        Ubicación
+      </span>
+
+      <select
+        [(ngModel)]="ubicacionSeleccionada"
+        class="hero-select">
+
+        <option
+          *ngFor="let ubicacion of ubicaciones"
+          [value]="ubicacion">
+
+          {{ ubicacion }}
+
+        </option>
+
+      </select>
 
     </div>
 
-    <!-- DEPORTE -->
-    <div class="search-item">
+  </div>
 
-        <svg
+  <!-- DEPORTE -->
+  <div class="search-item">
+
+    <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 640 640"
             class="search-svg-icon">
@@ -112,43 +128,58 @@
 
         </svg>
 
-        <div class="search-item">
     <div>
-        <span class="search-label">Deporte</span>
-        <select class="form-select border-0 bg-transparent shadow-none px-0 fw-bold text-dark" [(ngModel)]="deporteSeleccionado" style="cursor: pointer;">
-    @for (deporte of deportes; track deporte) {
-        <option [value]="deporte">{{ deporte }}</option>
-    }
-</select>
+
+      <span class="search-label">
+        Deporte
+      </span>
+
+      <select
+        [(ngModel)]="deporteSeleccionado"
+        class="hero-select">
+
+        @for (deporte of deportes; track deporte) {
+
+          <option [value]="deporte">
+            {{ deporte }}
+          </option>
+
+        }
+
+      </select>
+
     </div>
+
+  </div>
+
+  <!-- FECHA -->
+  <div class="search-item">
+
+    <app-date-picker
+      [(fecha)]="fechaSeleccionada">
+    </app-date-picker>
+
+  </div>
+
+  <!-- HORA -->
+  <div class="search-item">
+
+    <app-time-picker
+      [(hora)]="horaSeleccionada">
+    </app-time-picker>
+
+  </div>
+
+  <!-- BOTON -->
+  <button
+    class="search-btn"
+    (click)="buscarCanchas()">
+
+    Buscar canchas
+
+  </button>
+
 </div>
-
-    </div>
-
-    <!-- FECHA -->
-    <div class="search-item">
-
-        <div class="search-item">
-            <app-date-picker [(fecha)]="fechaSeleccionada"></app-date-picker>
-        </div>
-
-    </div>
-
-    <!-- HORA -->
-    <div class="search-item">
-
-        <div class="search-item">
-            <app-time-picker [(hora)]="horaSeleccionada"></app-time-picker>
-        </div>
-
-    </div>
-
-    <!-- BOTON -->
-    <button class="search-btn" (click)="buscarCanchas()">
-        Buscar canchas
-    </button>
-
-    </div>
 
   </div>
 

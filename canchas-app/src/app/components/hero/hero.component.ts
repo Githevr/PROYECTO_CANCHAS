@@ -1,33 +1,81 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+
 import { DatePickerComponent } from '../shared/date-picker/date-picker.component';
 import { TimePickerComponent } from '../shared/time-picker/time-picker.component';
 
 @Component({
   selector: 'app-hero',
-  imports: [DatePickerComponent, TimePickerComponent, FormsModule],
+  standalone: true,
+  imports: [
+    CommonModule,
+    DatePickerComponent,
+    TimePickerComponent,
+    FormsModule
+  ],
   templateUrl: './hero.component.html',
   styleUrl: './hero.component.css'
 })
 export class HeroComponent {
-  // 1. Ubicación (Google Maps)
-  nombreUbicacion = 'Balón de Oro';
-  // 1.2. Codificamos la dirección (esto convierte los espacios en %20 para que la URL no se rompa)
-  busquedaCodificada = encodeURIComponent('Canchas Balón de Oro, Trujillo, Perú');
 
-  // 1.3. Armamos la URL final que irá en el href
-  mapUrl = `https://www.google.com/maps/search/?api=1&query=${this.busquedaCodificada}`;
+  constructor(
+    private router: Router
+  ) {}
 
-  // 2. Deportes disponibles
-  deportes = ['Fútbol', 'Voley', 'Tenis', 'Básquet', 'Balonmano'];
-  deporteSeleccionado = 'Fútbol'; // Valor por defecto
+  // UBICACIONES
+  ubicaciones = [
+    'Todos',
+    'Lima',
+    'Trujillo',
+    'Arequipa',
+    'Cusco',
+    'Piura',
+    'Chiclayo',
+    'Tacna',
+    'Ica',
+    'Huancayo',
+    'Cajamarca',
+    'Puno',
+    'Chimbote',
+    'Tarapoto',
+    'Huaraz'
+  ];
 
-  // 3. Método para buscar (Se conectará a la BD después)
-  buscarCanchas() {
-    console.log('Buscando canchas para:', this.deporteSeleccionado);
-    // Aquí luego inyectaremos un servicio para llamar a tu backend
-  }
+  ubicacionSeleccionada = 'Todos';
 
+  // DEPORTES
+  deportes = [
+    'Todos',
+    'Fútbol',
+    'Voley',
+    'Tenis',
+    'Básquet',
+    'Balonmano'
+  ];
+
+  deporteSeleccionado = 'Todos';
+
+  // FILTROS
   fechaSeleccionada = '';
   horaSeleccionada = '';
+
+  // BUSCAR
+  buscarCanchas() {
+
+    this.router.navigate(
+      ['/reservar'],
+      {
+        queryParams: {
+          ubicacion: this.ubicacionSeleccionada,
+          deporte: this.deporteSeleccionado,
+          fecha: this.fechaSeleccionada,
+          hora: this.horaSeleccionada
+        }
+      }
+    );
+
+  }
+
 }

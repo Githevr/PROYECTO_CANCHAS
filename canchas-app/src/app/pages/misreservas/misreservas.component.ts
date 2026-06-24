@@ -20,10 +20,12 @@ import { Reserva } from '../../model/reserva.model';
   templateUrl: './misreservas.component.html',
   styleUrl: './misreservas.component.css'
 })
-
 export class MisreservasComponent implements OnInit {
 
   reservas: Reserva[] = [];
+
+  mensaje = '';
+  cargando = true;
 
   constructor(
     public authService: AuthService,
@@ -32,11 +34,38 @@ export class MisreservasComponent implements OnInit {
 
   ngOnInit(): void {
 
-    const usuario = this.authService.obtenerUsuarioActual();
+    const usuario =
+      this.authService.obtenerUsuarioActual();
 
-    if (usuario) {
-      this.reservas = this.reservaService.getReservasPorUsuario(usuario.email);
+    if (!usuario) {
+      this.cargando = false;
+      this.mensaje = 'Debes iniciar sesión';
+      return;
     }
+
+    this.reservaService
+      .getReservasPorUsuario(usuario.id)
+      .subscribe({
+
+        next: (data) => {
+
+          this.reservas = data;
+          this.cargando = false;
+
+        },
+
+        error: (error) => {
+
+          console.error(error);
+
+          this.mensaje =
+            'Error al cargar las reservas';
+
+          this.cargando = false;
+
+        }
+
+      });
 
   }
 

@@ -13,7 +13,9 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class ReservaService {
@@ -43,7 +45,7 @@ public class ReservaService {
 
         if (ocupada) {
             throw new RuntimeException(
-                    "La cancha ya se encuentra reservada"
+                    "La cancha ya se encuentra reservada en ese horario"
             );
         }
 
@@ -61,9 +63,16 @@ public class ReservaService {
 
         reserva.setCliente(cliente);
         reserva.setCancha(cancha);
+
         reserva.setFecha(request.getFecha());
+
         reserva.setHoraInicio(request.getHoraInicio());
-        reserva.setHoraFin(request.getHoraFin());
+
+        // Si la reserva es de 1 hora
+        reserva.setHoraFin(
+                request.getHoraInicio().plusHours(1)
+        );
+
         reserva.setEstado("CONFIRMADA");
 
         reserva = reservaRepository.save(reserva);
@@ -80,4 +89,68 @@ public class ReservaService {
 
         return reserva;
     }
+    
+
+    public List<String> obtenerHorariosDisponibles(
+            Long canchaId,
+            LocalDate fecha
+    ) {
+
+        List<String> horariosBase = List.of(
+                "09:00",
+                "10:00",
+                "11:00",
+                "12:00",
+                "13:00",
+                "14:00",
+                "15:00",
+                "16:00",
+                "17:00",
+                "18:00",
+                "19:00",
+                "20:00",
+                "21:00"
+        );
+
+        List<Reserva> reservas =
+                reservaRepository.findByCanchaIdAndFecha(
+                        canchaId,
+                        fecha
+                );
+
+        List<String> horariosOcupados =
+                reservas.stream()
+                        .map(reserva ->
+                                reserva.getHoraInicio()
+                                        .toString()
+                                        .substring(0, 5)
+                        )
+                        .toList();
+
+        return horariosBase.stream()
+                .filter(hora ->
+                        !horariosOcupados.contains(hora)
+                )
+                .toList();
+    }
+    public List<Reserva> obtenerReservasPorCliente(
+        Long clienteId
+) {
+
+    return reservaRepository.findByClienteId(
+            clienteId
+    );
+
+}
+public Reserva obtenerPorId(Long id) {
+
+    return reservaRepository
+            .findById(id)
+            .orElseThrow(
+                    () -> new RuntimeException(
+                            "Reserva no encontrada"
+                    )
+            );
+
+}
 }

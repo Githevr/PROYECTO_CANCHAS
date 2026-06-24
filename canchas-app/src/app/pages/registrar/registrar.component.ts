@@ -20,7 +20,6 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './registrar.component.html',
   styleUrl: './registrar.component.css'
 })
-
 export class RegistrarComponent {
 
   nombre: string = '';
@@ -39,42 +38,64 @@ export class RegistrarComponent {
   registrar() {
 
     if (!this.nombre || !this.email || !this.password || !this.confirmarPassword) {
-      this.mensaje = 'Por favor, completa todos los campos.';
+
+      this.mensaje =
+        'Por favor, completa todos los campos.';
+
       this.tipoMensaje = 'error';
       return;
     }
 
     if (this.password !== this.confirmarPassword) {
-      this.mensaje = 'Las contraseñas no coinciden.';
+
+      this.mensaje =
+        'Las contraseñas no coinciden.';
+
       this.tipoMensaje = 'error';
       return;
     }
 
     if (this.password.length < 6) {
-      this.mensaje = 'La contraseña debe tener al menos 6 caracteres.';
+
+      this.mensaje =
+        'La contraseña debe tener al menos 6 caracteres.';
+
       this.tipoMensaje = 'error';
       return;
     }
 
-    const resultado = this.authService.registrar({
+    const cliente = {
       nombre: this.nombre,
-      email: this.email,
+      apellido: '',
+      telefono: '',
+      correo: this.email,
       password: this.password
-    });
+    };
 
-    if (resultado) {
-      this.mensaje = '¡Registro exitoso! Redirigiendo al login...';
-      this.tipoMensaje = 'exito';
+    this.authService.registrar(cliente)
+      .subscribe({
 
-      setTimeout(() => {
-        this.router.navigate(['/iniciarsesion']);
-      }, 1500);
+        next: () => {
 
-    } else {
-      this.mensaje = 'Ya existe una cuenta con ese correo electrónico.';
-      this.tipoMensaje = 'error';
-    }
+          this.mensaje =
+            '¡Registro exitoso! Redirigiendo al login...';
 
+          this.tipoMensaje = 'exito';
+
+          setTimeout(() => {
+            this.router.navigate(['/iniciarsesion']);
+          }, 1500);
+        },
+
+        error: (error) => {
+
+          console.error(error);
+
+          this.mensaje =
+            'No se pudo registrar el usuario.';
+
+          this.tipoMensaje = 'error';
+        }
+      });
   }
-
 }
