@@ -71,6 +71,8 @@ export class IniciarsesionComponent {
         setTimeout(() => {
           if (response.rol === 'PROPIETARIO') {
             this.router.navigate(['/propietario/dashboard']);
+          } else if (response.rol === 'ADMIN') {
+            this.router.navigate(['/admin/dashboard']);
           } else {
             this.router.navigate(['/']);
           }

@@ -2,6 +2,7 @@ package com.canchas.service;
 
 import com.canchas.config.ConfiguracionPlataforma;
 import com.canchas.dto.ReservaRequest;
+import com.canchas.dto.HorarioDTO;
 import com.canchas.model.*;
 import com.canchas.repository.*;
 import jakarta.transaction.Transactional;
@@ -10,7 +11,9 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservaService {
@@ -40,12 +43,14 @@ public class ReservaService {
         Canchas cancha = canchaRepository.findById(request.getCanchaId())
                 .orElseThrow(() -> new RuntimeException("Cancha no encontrada"));
 
-        // 1. REGLA DE NEGOCIO REFINADA: Una cancha solo está ocupada si la reserva está CONFIRMADA o PAGADA.
-        // Las reservas en 'PENDIENTE_ADELANTO' no bloquean el horario para permitir que otros jugadores intenten reservar.
+        // 1. REGLA DE NEGOCIO REFINADA: Una cancha está ocupada si la reserva está CONFIRMADA o PAGADA.
+        // O si está en 'PENDIENTE_ADELANTO' pero su fechaExpiracionBloqueo aún no ha pasado (Bloqueo de 10 min).
+        LocalDateTime ahora = LocalDateTime.now();
         List<Reserva> reservasExistentes = reservaRepository.findByCanchaIdAndFecha(request.getCanchaId(), request.getFecha());
         boolean ocupada = reservasExistentes.stream()
                 .anyMatch(r -> r.getHoraInicio().equals(request.getHoraInicio()) && 
-                               (r.getEstado().equals("CONFIRMADA") || r.getEstado().equals("PAGADO")));
+                               (r.getEstado().equals("CONFIRMADA") || r.getEstado().equals("PAGADO") ||
+                               (r.getEstado().equals("PENDIENTE_ADELANTO") && r.getFechaExpiracionBloqueo() != null && ahora.isBefore(r.getFechaExpiracionBloqueo()))));
 
         if (ocupada) {
             throw new RuntimeException("La cancha ya se encuentra reservada y confirmada en ese horario por otro usuario.");
@@ -83,6 +88,7 @@ public class ReservaService {
         reserva.setPrecioTotal(precioTotal);
         reserva.setComisionAplicada(comisionAplicada);
         reserva.setEstado("PENDIENTE_ADELANTO"); 
+        reserva.setFechaExpiracionBloqueo(LocalDateTime.now().plusMinutes(10)); 
 
         reserva = reservaRepository.save(reserva);
 
@@ -228,7 +234,7 @@ public class ReservaService {
                 .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
     }
 
-    public List<String> obtenerHorariosDisponibles(Long canchaId, LocalDate fecha) {
+    public List<HorarioDTO> obtenerHorariosDisponibles(Long canchaId, LocalDate fecha) {
         List<String> horariosBase = List.of(
                 "09:00", "10:00", "11:00", "12:00", "13:00", "14:00",
                 "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"
@@ -236,15 +242,28 @@ public class ReservaService {
 
         List<Reserva> reservas = reservaRepository.findByCanchaIdAndFecha(canchaId, fecha);
 
-        // REGLA DE NEGOCIO REFINADA: Solo los horarios CONFIRMADA y PAGADO están ocupados.
-        // PENDIENTE_ADELANTO no bloquea el horario, por lo que sigue figurando disponible.
-        List<String> horariosOcupados = reservas.stream()
-                .filter(r -> r.getEstado().equals("CONFIRMADA") || r.getEstado().equals("PAGADO"))
-                .map(reserva -> reserva.getHoraInicio().toString().substring(0, 5))
-                .toList();
+        LocalDateTime ahora = LocalDateTime.now();
 
-        return horariosBase.stream()
-                .filter(hora -> !horariosOcupados.contains(hora))
-                .toList();
+        return horariosBase.stream().map(hora -> {
+            String horaFormateada = hora + ":00"; // para machear LocalTime si es necesario
+
+            // Buscar si hay alguna reserva que ocupa este horario
+            Reserva reservaOcupante = reservas.stream()
+                    .filter(r -> r.getHoraInicio().toString().substring(0, 5).equals(hora))
+                    .findFirst().orElse(null);
+
+            if (reservaOcupante != null) {
+                if (reservaOcupante.getEstado().equals("CONFIRMADA") || reservaOcupante.getEstado().equals("PAGADO")) {
+                    return new HorarioDTO(hora, "OCUPADO", 0L);
+                } else if (reservaOcupante.getEstado().equals("PENDIENTE_ADELANTO") && reservaOcupante.getFechaExpiracionBloqueo() != null) {
+                    if (ahora.isBefore(reservaOcupante.getFechaExpiracionBloqueo())) {
+                        long segundosRestantes = Duration.between(ahora, reservaOcupante.getFechaExpiracionBloqueo()).getSeconds();
+                        return new HorarioDTO(hora, "BLOQUEADO", segundosRestantes);
+                    }
+                }
+            }
+
+            return new HorarioDTO(hora, "LIBRE", 0L);
+        }).collect(Collectors.toList());
     }
 }

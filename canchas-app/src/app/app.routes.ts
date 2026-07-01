@@ -8,6 +8,7 @@ import { MisreservasComponent } from './pages/misreservas/misreservas.component'
 import { ContactoComponent } from './pages/contacto/contacto.component';
 import { ConfirmarCorreoComponent } from './pages/confirmar-correo/confirmar-correo.component';
 import { RealizarPagoComponent } from './pages/realizar-pago/realizar-pago.component';
+import { NoAutorizadoComponent } from './pages/no-autorizado/no-autorizado.component';
 
 // Importación de Guards de Seguridad
 import { authGuard } from './guards/auth.guard';
@@ -17,6 +18,9 @@ import { roleGuard } from './guards/role.guard';
 import { DashboardComponent } from './pages/propietario/dashboard/dashboard.component';
 import { MisComplejosComponent } from './pages/propietario/mis-complejos/mis-complejos.component';
 import { MisCreditosComponent } from './pages/propietario/mis-creditos/mis-creditos.component';
+
+// Importación de Componentes del Administrador
+import { AdminDashboardComponent } from './pages/admin/admin-dashboard/admin-dashboard.component';
 
 export const routes: Routes = [
 
@@ -51,15 +55,22 @@ export const routes: Routes = [
   },
 
   {
+    path: 'no-autorizado',
+    component: NoAutorizadoComponent
+  },
+
+  {
     path: 'misreservas',
     component: MisreservasComponent,
-    canActivate: [authGuard] // Protegida para cualquier usuario autenticado
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['JUGADOR', 'ADMIN'] }
   },
 
   {
     path: 'realizar-pago/:id',
     component: RealizarPagoComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['JUGADOR', 'ADMIN'] }
   },
 
   {
@@ -72,7 +83,7 @@ export const routes: Routes = [
     path: 'propietario/dashboard',
     component: DashboardComponent,
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['PROPIETARIO'] }
+    data: { roles: ['PROPIETARIO', 'ADMIN'] }
   },
 
   // RUTA: Gestión de Complejos Deportivos y Canchas del Propietario (Protegido por Rol)
@@ -80,7 +91,7 @@ export const routes: Routes = [
     path: 'propietario/mis-complejos',
     component: MisComplejosComponent,
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['PROPIETARIO'] }
+    data: { roles: ['PROPIETARIO', 'ADMIN'] }
   },
 
   // RUTA: Monedero y Recarga de Créditos del Propietario (Protegido por Rol)
@@ -88,7 +99,18 @@ export const routes: Routes = [
     path: 'propietario/mis-creditos',
     component: MisCreditosComponent,
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['PROPIETARIO'] }
+    data: { roles: ['PROPIETARIO', 'ADMIN'] }
+  },
+
+  // =========================================================================
+  // RUTA: Panel de Administración (Solo ADMIN, protegido por Guards)
+  // Nadie con rol JUGADOR o PROPIETARIO puede acceder a esta ruta.
+  // =========================================================================
+  {
+    path: 'admin/dashboard',
+    component: AdminDashboardComponent,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMIN'] }
   },
 
   // Redirección por defecto si la ruta no existe

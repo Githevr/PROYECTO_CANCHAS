@@ -1,6 +1,6 @@
 package com.canchas.service;
 
-import com.canchas.model.Pago;
+
 import com.canchas.model.Reserva;
 import com.canchas.repository.PagoRepository;
 import com.canchas.repository.ReservaRepository;

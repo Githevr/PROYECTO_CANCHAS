@@ -1,8 +1,11 @@
 package com.canchas.controller;
 
+import com.canchas.dto.HorarioDTO;
 import com.canchas.dto.ReservaRequest;
 import com.canchas.model.Reserva;
+import com.canchas.model.ReporteReserva;
 import com.canchas.service.ReservaService;
+import com.canchas.service.ReporteService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,9 +18,11 @@ import java.util.List;
 public class ReservaController {
 
     private final ReservaService reservaService;
+    private final ReporteService reporteService;
 
-    public ReservaController(ReservaService reservaService) {
+    public ReservaController(ReservaService reservaService, ReporteService reporteService) {
         this.reservaService = reservaService;
+        this.reporteService = reporteService;
     }
 
     @PostMapping
@@ -26,7 +31,7 @@ public class ReservaController {
     }
 
     @GetMapping("/disponibilidad/{canchaId}")
-    public List<String> obtenerDisponibilidad(
+    public List<HorarioDTO> obtenerDisponibilidad(
             @PathVariable Long canchaId,
             @RequestParam String fecha
     ) {
@@ -91,5 +96,34 @@ public class ReservaController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    // =========================================================================
+    // REPORTE DE CONTROVERSIA (El jugador reporta que pagó y no le confirmaron)
+    // Requiere al menos 1 evidencia obligatoria (fotos, capturas de conversación)
+    // =========================================================================
+    @PostMapping("/{id}/reportar")
+    public ResponseEntity<?> reportarReserva(
+            @PathVariable Long id,
+            @RequestParam Long jugadorId,
+            @RequestParam String motivo,
+            @RequestParam String urlEvidencia1,
+            @RequestParam(required = false) String urlEvidencia2,
+            @RequestParam(required = false) String urlEvidencia3
+    ) {
+        try {
+            ReporteReserva reporte = reporteService.crearReporte(
+                    id, jugadorId, motivo, urlEvidencia1, urlEvidencia2, urlEvidencia3
+            );
+            return ResponseEntity.ok(reporte);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Obtener reportes del jugador autenticado
+    @GetMapping("/reportes/{jugadorId}")
+    public List<ReporteReserva> obtenerReportesJugador(@PathVariable Long jugadorId) {
+        return reporteService.obtenerReportesJugador(jugadorId);
     }
 }

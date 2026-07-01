@@ -51,8 +51,21 @@ export class RealizarPagoComponent implements OnInit, OnDestroy {
           this.reserva = data;
           this.cargando = false;
           
-          // Iniciar el temporizador de 10 minutos solo si la reserva está pendiente de pago
           if (this.reserva && this.reserva.estado === 'PENDIENTE_ADELANTO') {
+            if (this.reserva.fechaExpiracionBloqueo) {
+              const expiracion = new Date(this.reserva.fechaExpiracionBloqueo).getTime();
+              const ahora = new Date().getTime();
+              const diferenciaSegundos = Math.floor((expiracion - ahora) / 1000);
+              
+              if (diferenciaSegundos > 0) {
+                this.tiempoRestante = diferenciaSegundos;
+              } else {
+                this.tiempoRestante = 0;
+                this.tiempoExpirado = true;
+              }
+            } else {
+               this.tiempoRestante = 600;
+            }
             this.iniciarTemporizador();
           }
 
@@ -89,6 +102,12 @@ export class RealizarPagoComponent implements OnInit, OnDestroy {
       } else {
         this.tiempoExpirado = true;
         clearInterval(this.intervaloId);
+        
+        // Redirigir porque se acabó el tiempo
+        if (this.reserva.estado === 'PENDIENTE_ADELANTO') {
+          alert('El tiempo para realizar el pago de esta reserva ha expirado.');
+          this.router.navigate(['/misreservas']);
+        }
       }
     }, 1000);
   }

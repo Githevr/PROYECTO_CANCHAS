@@ -1,0 +1,223 @@
+<div class="container py-4">
+
+  <!-- TÍTULO DEL PANEL -->
+  <div class="d-flex align-items-center mb-4">
+    <i class="bi bi-shield-lock-fill text-danger fs-2 me-3"></i>
+    <h2 class="fw-bold m-0">Panel de Administración</h2>
+  </div>
+
+  <!-- PESTAÑAS DE NAVEGACIÓN -->
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="tabActiva === 'duenos'" (click)="tabActiva = 'duenos'">
+        <i class="bi bi-people-fill me-1"></i> Gestión de Dueños
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="tabActiva === 'kyb'" (click)="tabActiva = 'kyb'">
+        <i class="bi bi-building-check me-1"></i> Verificaciones KYB
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="tabActiva === 'reportes'" (click)="tabActiva = 'reportes'">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i> Controversias
+      </button>
+    </li>
+  </ul>
+
+  <!-- ================================================================= -->
+  <!-- PESTAÑA 1: GESTIÓN DE DUEÑOS Y CRÉDITOS                         -->
+  <!-- ================================================================= -->
+  <div *ngIf="tabActiva === 'duenos'">
+    <div class="row">
+      <!-- Buscador -->
+      <div class="col-md-7">
+        <div class="input-group mb-3">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control" placeholder="Buscar dueño por nombre o correo..." [(ngModel)]="busquedaDueno" (keyup.enter)="buscarDuenos()">
+          <button class="btn btn-primary" (click)="buscarDuenos()">Buscar</button>
+        </div>
+
+        <!-- Tabla de dueños -->
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-dark">
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Créditos</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let dueno of duenos" [class.table-primary]="duenoSeleccionado?.id === dueno.id">
+                <td>{{ dueno.id }}</td>
+                <td>{{ dueno.nombre }}</td>
+                <td>{{ dueno.correo }}</td>
+                <td class="fw-bold">S/ {{ dueno.creditos | number:'1.2-2' }}</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary" (click)="seleccionarDueno(dueno)">
+                    <i class="bi bi-pencil-square"></i> Seleccionar
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="duenos.length === 0">
+                <td colspan="5" class="text-center text-muted py-4">No se encontraron dueños registrados.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Panel de Créditos (aparece al seleccionar un dueño) -->
+      <div class="col-md-5" *ngIf="duenoSeleccionado">
+        <div class="card shadow border-0">
+          <div class="card-header bg-dark text-white text-center">
+            <h5 class="m-0"><i class="bi bi-wallet2 me-2"></i>Monedero de {{ duenoSeleccionado.nombre }}</h5>
+          </div>
+          <div class="card-body">
+            <div class="text-center mb-3">
+              <span class="badge bg-success fs-4 p-3">S/ {{ duenoSeleccionado.creditos | number:'1.2-2' }}</span>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold">Monto (S/)</label>
+              <input type="number" class="form-control" [(ngModel)]="montoCreditos" min="1" placeholder="Ej: 50.00">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold">Descripción (opcional)</label>
+              <input type="text" class="form-control" [(ngModel)]="descripcionCreditos" placeholder="Ej: Bonificación por evento">
+            </div>
+
+            <div class="d-flex gap-2">
+              <button class="btn btn-success flex-fill" (click)="agregarCreditos()">
+                <i class="bi bi-plus-circle me-1"></i> Dar Créditos
+              </button>
+              <button class="btn btn-danger flex-fill" (click)="quitarCreditos()">
+                <i class="bi bi-dash-circle me-1"></i> Quitar Créditos
+              </button>
+            </div>
+
+            <div *ngIf="mensajeCreditos" class="alert alert-info mt-3 text-center">
+              {{ mensajeCreditos }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- PESTAÑA 2: VERIFICACIONES KYB                                   -->
+  <!-- ================================================================= -->
+  <div *ngIf="tabActiva === 'kyb'">
+    <div class="row">
+      <div class="col-12" *ngFor="let complejo of complejosPendientes">
+        <div class="card mb-3 shadow-sm border-warning">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h5 class="fw-bold">{{ complejo.nombre }}</h5>
+                <p class="text-muted mb-1"><i class="bi bi-geo-alt"></i> {{ complejo.direccion }}, {{ complejo.ciudad }}</p>
+                <p class="mb-1"><strong>RUC:</strong> {{ complejo.ruc || 'No registrado' }}</p>
+                <p class="mb-1"><strong>Razón Social:</strong> {{ complejo.razonSocial || 'No registrada' }}</p>
+                <p class="mb-1"><strong>Propietario:</strong> {{ complejo.propietario?.nombre }} ({{ complejo.propietario?.correo }})</p>
+              </div>
+              <span class="badge bg-warning text-dark fs-6 p-2">PENDIENTE</span>
+            </div>
+
+            <!-- Links a documentos legales -->
+            <div class="mt-2 mb-3">
+              <a *ngIf="complejo.urlLicencia" [href]="complejo.urlLicencia" target="_blank" class="btn btn-sm btn-outline-secondary me-2">
+                <i class="bi bi-file-earmark-pdf"></i> Licencia Municipal
+              </a>
+              <a *ngIf="complejo.urlFichaRuc" [href]="complejo.urlFichaRuc" target="_blank" class="btn btn-sm btn-outline-secondary me-2">
+                <i class="bi bi-file-earmark-pdf"></i> Ficha RUC
+              </a>
+              <a *ngIf="complejo.urlDniRepresentante" [href]="complejo.urlDniRepresentante" target="_blank" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-person-badge"></i> DNI Representante
+              </a>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button class="btn btn-success" (click)="aprobarComplejo(complejo.id)">
+                <i class="bi bi-check-circle me-1"></i> Aprobar Complejo
+              </button>
+              <button class="btn btn-danger" (click)="rechazarComplejo(complejo.id)">
+                <i class="bi bi-x-circle me-1"></i> Rechazar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="complejosPendientes.length === 0" class="text-center text-muted py-5">
+        <i class="bi bi-check-all fs-1"></i>
+        <p class="mt-2">No hay complejos pendientes de verificación.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- PESTAÑA 3: CONTROVERSIAS / REPORTES CON EVIDENCIA               -->
+  <!-- ================================================================= -->
+  <div *ngIf="tabActiva === 'reportes'">
+    <div class="row">
+      <div class="col-12" *ngFor="let reporte of reportesPendientes">
+        <div class="card mb-3 shadow-sm border-danger">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h5 class="fw-bold text-danger"><i class="bi bi-exclamation-triangle"></i> Reporte #{{ reporte.id }}</h5>
+                <p class="mb-1"><strong>Jugador:</strong> {{ reporte.jugador?.nombre }} ({{ reporte.jugador?.correo }})</p>
+                <p class="mb-1"><strong>Reserva ID:</strong> {{ reporte.reserva?.id }}</p>
+                <p class="mb-1"><strong>Motivo:</strong> {{ reporte.motivo }}</p>
+                <p class="mb-1 text-muted"><strong>Fecha:</strong> {{ reporte.fechaReporte }}</p>
+              </div>
+              <span class="badge bg-danger fs-6 p-2">PENDIENTE</span>
+            </div>
+
+            <!-- Evidencias subidas por el jugador (fotos, capturas de conversación) -->
+            <div class="mt-3 mb-3">
+              <strong>Evidencias del jugador:</strong>
+              <div class="d-flex gap-2 mt-2 flex-wrap">
+                <a *ngIf="reporte.urlEvidencia1" [href]="reporte.urlEvidencia1" target="_blank" class="btn btn-sm btn-outline-info">
+                  <i class="bi bi-image"></i> Evidencia 1
+                </a>
+                <a *ngIf="reporte.urlEvidencia2" [href]="reporte.urlEvidencia2" target="_blank" class="btn btn-sm btn-outline-info">
+                  <i class="bi bi-image"></i> Evidencia 2
+                </a>
+                <a *ngIf="reporte.urlEvidencia3" [href]="reporte.urlEvidencia3" target="_blank" class="btn btn-sm btn-outline-info">
+                  <i class="bi bi-image"></i> Evidencia 3
+                </a>
+              </div>
+            </div>
+
+            <!-- Campo de resolución del admin -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Resolución del Administrador</label>
+              <textarea class="form-control" rows="2" [(ngModel)]="resolucionTexto" placeholder="Escribe tu resolución aquí..."></textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button class="btn btn-success" (click)="resolverAFavor(reporte.id)">
+                <i class="bi bi-check-circle me-1"></i> A favor del Jugador (Penalizar Dueño)
+              </button>
+              <button class="btn btn-secondary" (click)="resolverRechazado(reporte.id)">
+                <i class="bi bi-x-circle me-1"></i> Rechazar Reporte
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="reportesPendientes.length === 0" class="text-center text-muted py-5">
+        <i class="bi bi-check-all fs-1"></i>
+        <p class="mt-2">No hay controversias pendientes.</p>
+      </div>
+    </div>
+  </div>
+
+</div>

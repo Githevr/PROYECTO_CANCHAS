@@ -10,6 +10,7 @@ public class LoginResponse {
     private String mensaje;
     private String rol;
     private BigDecimal creditos;
+    private String token; // Token JWT
 
     public LoginResponse() {
     }
@@ -20,7 +21,8 @@ public class LoginResponse {
             String correo,
             String mensaje,
             String rol,
-            BigDecimal creditos
+            BigDecimal creditos,
+            String token
     ) {
         this.id = id;
         this.nombre = nombre;
@@ -28,6 +30,7 @@ public class LoginResponse {
         this.mensaje = mensaje;
         this.rol = rol;
         this.creditos = creditos;
+        this.token = token;
     }
 
     public Long getId() {
@@ -76,5 +79,13 @@ public class LoginResponse {
 
     public void setCreditos(BigDecimal creditos) {
         this.creditos = creditos;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

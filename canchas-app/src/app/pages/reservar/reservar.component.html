@@ -217,11 +217,15 @@
 
         <button
           class="horario-btn"
-          *ngFor="let hora of horariosDisponibles"
-          [class.horario-activo]="horaSeleccionada === hora"
-          (click)="seleccionarHora(hora)">
+          *ngFor="let h of horariosDisponibles"
+          [class.horario-activo]="horaSeleccionada === h.hora"
+          [class.horario-bloqueado]="h.estado === 'BLOQUEADO' || h.estado === 'OCUPADO'"
+          [disabled]="h.estado !== 'LIBRE'"
+          [title]="h.estado === 'BLOQUEADO' ? 'INTENTE DE NUEVO EN ' + (h.segundosRestantes / 60 | number:'1.0-0') + ' MINUTOS' : (h.estado === 'OCUPADO' ? 'OCUPADO' : 'LIBRE')"
+          (click)="seleccionarHora(h.hora)">
 
-          {{ hora }}
+          {{ h.hora }}
+          <small *ngIf="h.estado === 'BLOQUEADO'" class="bloqueado-txt">Bloqueado</small>
 
         </button>
 
@@ -446,4 +450,47 @@
     </div>
   </div>
 
+</div>
+
+<!-- MODAL DE CALIFICACIÓN PENDIENTE -->
+<div class="modal-overlay" *ngIf="mostrarCalificacionModal" (click)="saltarCalificacion()">
+  <div class="modal-container text-center" style="max-width: 500px;" (click)="$event.stopPropagation()">
+    
+    <button class="modal-close-btn" (click)="saltarCalificacion()">&times;</button>
+    
+    <h2 class="mb-3">¡Bienvenido de vuelta!</h2>
+    <p class="text-muted mb-4">
+      Notamos que jugaste en <strong>{{ reservaPendienteCalificar?.cancha?.nombre }}</strong> 
+      en el complejo <strong>{{ reservaPendienteCalificar?.cancha?.complejo?.nombre || 'PlayField' }}</strong>.
+      ¿Qué te pareció la experiencia?
+    </p>
+
+    <!-- ESTRELLAS -->
+    <div class="estrellas mb-4 d-flex justify-content-center gap-2">
+      <i class="bi fs-1 cursor-pointer"
+         *ngFor="let i of [1,2,3,4,5]"
+         [ngClass]="i <= calificacionData.puntuacion ? 'bi-star-fill text-warning' : 'bi-star text-muted'"
+         (click)="seleccionarEstrella(i)"
+         style="cursor: pointer;">
+      </i>
+    </div>
+
+    <!-- COMENTARIO -->
+    <div class="mb-4 text-start">
+      <label class="form-label fw-bold">Déjanos tu comentario (Obligatorio)</label>
+      <textarea 
+        class="form-control" 
+        rows="3" 
+        [(ngModel)]="calificacionData.comentario" 
+        placeholder="¿Cómo estaba la cancha? ¿Qué tal la atención?">
+      </textarea>
+    </div>
+
+    <!-- BOTONES -->
+    <div class="d-flex justify-content-end gap-3">
+      <button class="btn btn-outline-secondary" (click)="saltarCalificacion()">Saltar por ahora</button>
+      <button class="btn btn-success" (click)="enviarCalificacion()">Enviar Calificación</button>
+    </div>
+
+  </div>
 </div>

@@ -39,9 +39,38 @@ public class ComplejoDeportivo {
 
     private Double rating;
 
+    // =========================================================================
+    // CAMPOS KYB (Know Your Business) - Verificación Legal del Complejo
+    // =========================================================================
+
+    // RUC del negocio (11 dígitos, Persona Jurídica o Natural con Negocio)
+    @Column(length = 11)
+    private String ruc;
+
+    // Razón social registrada en SUNAT
+    @Column(name = "razon_social")
+    private String razonSocial;
+
+    // Estado de verificación del complejo: PENDING_VERIFICATION, APPROVED, REJECTED
+    @Column(name = "estado_verificacion", nullable = false, length = 50)
+    private String estadoVerificacion;
+
+    // URL del archivo PDF/Imagen de la Licencia de Funcionamiento Municipal
+    @Column(name = "url_licencia")
+    private String urlLicencia;
+
+    // URL del archivo PDF/Imagen de la Ficha RUC (SUNAT)
+    @Column(name = "url_ficha_ruc")
+    private String urlFichaRuc;
+
+    // URL de la foto/PDF del DNI o Carnet de Extranjería del Representante Legal
+    @Column(name = "url_dni_representante")
+    private String urlDniRepresentante;
+
     public ComplejoDeportivo() {
         this.rating = 5.0;
         this.ciudad = "Trujillo";
+        this.estadoVerificacion = "PENDING_VERIFICATION"; // Estado inicial: pendiente de revisión
     }
 
     // GETTERS Y SETTERS
@@ -133,4 +162,26 @@ public class ComplejoDeportivo {
     public void setRating(Double rating) {
         this.rating = rating;
     }
+
+    // =========================================================================
+    // GETTERS Y SETTERS KYB
+    // =========================================================================
+
+    public String getRuc() { return ruc; }
+    public void setRuc(String ruc) { this.ruc = ruc; }
+
+    public String getRazonSocial() { return razonSocial; }
+    public void setRazonSocial(String razonSocial) { this.razonSocial = razonSocial; }
+
+    public String getEstadoVerificacion() { return estadoVerificacion; }
+    public void setEstadoVerificacion(String estadoVerificacion) { this.estadoVerificacion = estadoVerificacion; }
+
+    public String getUrlLicencia() { return urlLicencia; }
+    public void setUrlLicencia(String urlLicencia) { this.urlLicencia = urlLicencia; }
+
+    public String getUrlFichaRuc() { return urlFichaRuc; }
+    public void setUrlFichaRuc(String urlFichaRuc) { this.urlFichaRuc = urlFichaRuc; }
+
+    public String getUrlDniRepresentante() { return urlDniRepresentante; }
+    public void setUrlDniRepresentante(String urlDniRepresentante) { this.urlDniRepresentante = urlDniRepresentante; }
 }

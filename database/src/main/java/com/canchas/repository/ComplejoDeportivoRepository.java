@@ -16,7 +16,7 @@ public interface ComplejoDeportivoRepository extends JpaRepository<ComplejoDepor
     // Buscar complejos por ciudad (e.g. para el dropdown/textbox de ubicación del jugador)
     List<ComplejoDeportivo> findByCiudadIgnoreCase(String ciudad);
 
-    // Buscar complejos activos (propietarios con saldo de crédito positivo > 0) filtrados por ciudad
-    @Query("SELECT c FROM ComplejoDeportivo c WHERE LOWER(c.ciudad) = LOWER(:ciudad) AND c.propietario.creditos > 0.00")
+    // Buscar complejos activos (propietarios con saldo > 0) Y aprobados por KYB, filtrados por ciudad
+    @Query("SELECT c FROM ComplejoDeportivo c WHERE LOWER(c.ciudad) = LOWER(:ciudad) AND c.propietario.creditos > 0.00 AND c.estadoVerificacion = 'APPROVED'")
     List<ComplejoDeportivo> findComplejosActivosPorCiudad(@Param("ciudad") String ciudad);
 }

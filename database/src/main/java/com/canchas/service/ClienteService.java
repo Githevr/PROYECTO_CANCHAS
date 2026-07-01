@@ -14,15 +14,25 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import com.canchas.security.JwtUtil;
+
 @Service
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
     private final EmailService emailService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
 
-    public ClienteService(ClienteRepository clienteRepository, EmailService emailService) {
+    public ClienteService(ClienteRepository clienteRepository, EmailService emailService, 
+                          AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
         this.clienteRepository = clienteRepository;
         this.emailService = emailService;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
     }
 
     public Cliente guardar(Cliente cliente) {
@@ -97,9 +107,18 @@ public class ClienteService {
             throw new RuntimeException("Debe confirmar su correo electrónico antes de iniciar sesión.");
         }
 
-        if (!cliente.getPassword().equals(request.getPassword())) {
-            throw new RuntimeException("Contraseña incorrecta");
+        // Usar AuthenticationManager de Spring Security para validar credenciales
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getCorreo(), request.getPassword())
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Contraseña incorrecta o credenciales inválidas");
         }
+
+        // Generar JWT
+        String token = jwtUtil.generarToken(cliente.getCorreo(), cliente.getRol());
 
         return new LoginResponse(
                 cliente.getId(),
@@ -107,7 +126,8 @@ public class ClienteService {
                 cliente.getCorreo(),
                 "Login exitoso",
                 cliente.getRol(),
-                cliente.getCreditos()
+                cliente.getCreditos(),
+                token
         );
     }
 

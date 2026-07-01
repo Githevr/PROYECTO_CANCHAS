@@ -22,10 +22,15 @@ import { Reserva } from '../../model/reserva.model';
 })
 export class MisreservasComponent implements OnInit {
 
-  reservas: Reserva[] = [];
+  reservas: any[] = [];
 
   mensaje = '';
   cargando = true;
+
+  // MODAL DE DETALLES
+  mostrarDetallesModal: boolean = false;
+  reservaParaDetalles: any = null;
+  imagenActivaIndex: number = 0;
 
   constructor(
     public authService: AuthService,
@@ -67,6 +72,77 @@ export class MisreservasComponent implements OnInit {
 
       });
 
+  }
+
+  obtenerImagenUrl(imagen: string): string {
+    if (!imagen) return '/images/cancha_placeholder.jpg';
+    if (imagen.startsWith('/uploads/')) {
+      return 'http://localhost:8080' + imagen;
+    }
+    return imagen;
+  }
+
+  // MÉTODOS PARA MODAL DE DETALLES
+  abrirDetalles(reserva: any, event: Event) {
+    event.stopPropagation();
+    this.reservaParaDetalles = reserva;
+    this.imagenActivaIndex = 0;
+    this.mostrarDetallesModal = true;
+  }
+
+  cerrarDetalles() {
+    this.mostrarDetallesModal = false;
+    this.reservaParaDetalles = null;
+  }
+
+  siguienteImagen() {
+    if (this.reservaParaDetalles && this.reservaParaDetalles.cancha) {
+      const imagenes = this.obtenerTodasLasImagenes(this.reservaParaDetalles.cancha);
+      if (imagenes.length > 0) {
+        this.imagenActivaIndex = (this.imagenActivaIndex + 1) % imagenes.length;
+      }
+    }
+  }
+
+  anteriorImagen() {
+    if (this.reservaParaDetalles && this.reservaParaDetalles.cancha) {
+      const imagenes = this.obtenerTodasLasImagenes(this.reservaParaDetalles.cancha);
+      if (imagenes.length > 0) {
+        this.imagenActivaIndex = (this.imagenActivaIndex - 1 + imagenes.length) % imagenes.length;
+      }
+    }
+  }
+
+  obtenerTodasLasImagenes(cancha: any): string[] {
+    const urls: string[] = [];
+    if (cancha && cancha.imagen) {
+      urls.push(this.obtenerImagenUrl(cancha.imagen));
+    }
+    if (cancha && cancha.imagenes && cancha.imagenes.length > 0) {
+      cancha.imagenes.forEach((img: string) => {
+        const resolved = this.obtenerImagenUrl(img);
+        if (!urls.includes(resolved)) {
+          urls.push(resolved);
+        }
+      });
+    }
+    if (urls.length === 0) {
+      urls.push('/images/cancha_placeholder.jpg');
+    }
+    return urls;
+  }
+
+  obtenerBeneficiosLista(beneficiosString: string): string[] {
+    if (!beneficiosString) return [];
+    return beneficiosString.split(',').map(b => b.trim()).filter(b => b.length > 0);
+  }
+
+  obtenerEnlaceWhatsApp(reserva: any): string {
+    if (!reserva || !reserva.cancha || !reserva.cancha.complejo) return '';
+    const complejo = reserva.cancha.complejo;
+    const telefono = complejo.telefonoContacto || '987654321';
+    const texto = `Hola, quiero confirmar mi reserva de la cancha *${reserva.cancha.nombre}* para la fecha *${reserva.fecha}*.`;
+    return `https://wa.me/51${telefono}?text=${encodeURIComponent(texto)}`;
   }
 
 }

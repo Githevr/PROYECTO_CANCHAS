@@ -407,6 +407,23 @@
   border-color:#39d353;
 }
 
+.horario-bloqueado{
+  background:rgba(255,255,255,0.02);
+  color:rgba(255,255,255,0.2);
+  border-color:transparent;
+  cursor:not-allowed;
+  position:relative;
+}
+.horario-bloqueado:hover{
+  border-color:transparent;
+}
+.bloqueado-txt {
+  display:block;
+  font-size:10px;
+  color:#f59e0b;
+  margin-top:4px;
+}
+
 .sin-horarios{
   text-align:center;
   color:rgba(255,255,255,.5);

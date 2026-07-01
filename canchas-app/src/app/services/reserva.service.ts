@@ -14,6 +14,12 @@ export interface CanchaLocal {
   complejo?: any; // Vinculación opcional al complejo deportivo
 }
 
+export interface HorarioDTO {
+  hora: string;
+  estado: string;
+  segundosRestantes: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -27,8 +33,8 @@ export class ReservaService {
     return this.http.get<CanchaLocal[]>('http://localhost:8080/canchas');
   }
 
-  getHorariosDisponibles(canchaId: number, fecha: string): Observable<string[]> {
-    return this.http.get<string[]>(`${this.apiUrl}/disponibilidad/${canchaId}?fecha=${fecha}`);
+  getHorariosDisponibles(canchaId: number, fecha: string): Observable<HorarioDTO[]> {
+    return this.http.get<HorarioDTO[]>(`${this.apiUrl}/disponibilidad/${canchaId}?fecha=${fecha}`);
   }
 
   getReservasPorUsuario(clienteId: number): Observable<any[]> {
@@ -60,5 +66,14 @@ export class ReservaService {
   // Liberar reserva por inasistencia (Dueño)
   liberarReserva(reservaId: number, propietarioId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/${reservaId}/liberar?propietarioId=${propietarioId}`, {});
+  }
+
+  // Calificaciones
+  getReservaPendienteCalificar(clienteId: number): Observable<any> {
+    return this.http.get<any>(`http://localhost:8080/calificaciones/pendiente/${clienteId}`);
+  }
+
+  guardarCalificacion(data: any): Observable<any> {
+    return this.http.post<any>('http://localhost:8080/calificaciones', data);
   }
 }

@@ -179,10 +179,53 @@
   color: #39d353;
 }
 
+/* PENDIENTE OVERLAY */
+.card-pendiente {
+  border-color: rgba(245, 158, 11, 0.4);
+  position: relative;
+}
+
+.card-pendiente .reserva-imagen {
+  filter: grayscale(80%) opacity(0.8);
+}
+
+.pendiente-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(245, 158, 11, 0.9);
+  color: #000;
+  padding: 12px;
+  text-align: center;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+  border-bottom: 2px solid #b45309;
+}
+
+.pendiente-texto {
+  font-weight: 800;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pendiente-texto small {
+  display: block;
+  font-weight: 600;
+  font-size: 11px;
+  margin-top: 4px;
+  color: #451a03;
+}
+
 .estado-pendiente {
-  background: rgba(245, 158, 11, 0.2);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.9);
+  border: 1px solid #b45309;
+  color: #000;
+  z-index: 11;
+  top: auto;
+  bottom: 10px;
+  right: 10px;
 }
 
 /* INFO */

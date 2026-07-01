@@ -3,6 +3,7 @@ package com.canchas.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -40,6 +41,9 @@ public class Reserva {
 
     @Column(name = "precio_total", nullable = false, precision = 10, scale = 2)
     private BigDecimal precioTotal; // Precio de la cancha * horas reservadas
+
+    @Column(name = "fecha_expiracion_bloqueo")
+    private LocalDateTime fechaExpiracionBloqueo;
 
     public Reserva() {
         this.estado = "PENDIENTE_ADELANTO";
@@ -119,5 +123,13 @@ public class Reserva {
 
     public void setPrecioTotal(BigDecimal precioTotal) {
         this.precioTotal = precioTotal;
+    }
+
+    public LocalDateTime getFechaExpiracionBloqueo() {
+        return fechaExpiracionBloqueo;
+    }
+
+    public void setFechaExpiracionBloqueo(LocalDateTime fechaExpiracionBloqueo) {
+        this.fechaExpiracionBloqueo = fechaExpiracionBloqueo;
     }
 }

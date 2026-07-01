@@ -5,7 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 
 import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { AuthService } from '../../services/auth.service';
-import { ReservaService, CanchaLocal } from '../../services/reserva.service';
+import { ReservaService, CanchaLocal, HorarioDTO } from '../../services/reserva.service';
 
 @Component({
   selector: 'app-reservar',
@@ -35,7 +35,7 @@ export class ReservarComponent implements OnInit {
 
   // SELECCIÓN
   canchaSeleccionada: CanchaLocal | null = null;
-  horariosDisponibles: string[] = [];
+  horariosDisponibles: HorarioDTO[] = [];
   horaSeleccionada: string = '';
 
   // MENSAJE
@@ -46,6 +46,11 @@ export class ReservarComponent implements OnInit {
   mostrarDetallesModal: boolean = false;
   canchaParaDetalles: CanchaLocal | null = null;
   imagenActivaIndex: number = 0;
+
+  // MODAL DE CALIFICACIONES
+  mostrarCalificacionModal: boolean = false;
+  reservaPendienteCalificar: any = null;
+  calificacionData = { puntuacion: 0, comentario: '' };
 
   constructor(
     private authService: AuthService,
@@ -91,6 +96,19 @@ export class ReservarComponent implements OnInit {
         this.tipoMensaje = 'error';
       }
     });
+
+    const usuario = this.authService.obtenerUsuarioActual();
+    if (usuario) {
+      this.reservaService.getReservaPendienteCalificar(usuario.id).subscribe({
+        next: (reserva) => {
+          if (reserva) {
+            this.reservaPendienteCalificar = reserva;
+            this.mostrarCalificacionModal = true;
+          }
+        },
+        error: () => {} // Si falla o no hay contenido (204), no hacemos nada
+      });
+    }
   }
 
   get canchasFiltradas(): CanchaLocal[] {
@@ -161,14 +179,13 @@ export class ReservarComponent implements OnInit {
 
         next: (horarios) => {
 
-          this.horariosDisponibles =
-            horarios;
+          this.horariosDisponibles = horarios;
 
-          if (
-            !this.horariosDisponibles.includes(
-              this.horaSeleccionada
-            )
-          ) {
+          const seleccionValida = this.horariosDisponibles.some(
+            h => h.hora === this.horaSeleccionada && h.estado === 'LIBRE'
+          );
+
+          if (!seleccionValida) {
             this.horaSeleccionada = '';
           }
 
@@ -331,6 +348,43 @@ export class ReservarComponent implements OnInit {
       return 'http://localhost:8080' + imagen;
     }
     return imagen;
+  }
+
+  // --- LOGICA DE CALIFICACIONES ---
+  seleccionarEstrella(puntaje: number) {
+    this.calificacionData.puntuacion = puntaje;
+  }
+
+  saltarCalificacion() {
+    this.mostrarCalificacionModal = false;
+  }
+
+  enviarCalificacion() {
+    if (this.calificacionData.puntuacion === 0) {
+      alert('Por favor selecciona una puntuación.');
+      return;
+    }
+    if (!this.calificacionData.comentario.trim()) {
+      alert('Por favor agrega un comentario.');
+      return;
+    }
+
+    const payload = {
+      reservaId: this.reservaPendienteCalificar.id,
+      clienteId: this.authService.obtenerUsuarioActual().id,
+      puntuacion: this.calificacionData.puntuacion,
+      comentario: this.calificacionData.comentario
+    };
+
+    this.reservaService.guardarCalificacion(payload).subscribe({
+      next: () => {
+        this.mostrarCalificacionModal = false;
+        alert('¡Gracias por tu calificación!');
+      },
+      error: () => {
+        alert('Ocurrió un error al enviar la calificación.');
+      }
+    });
   }
 
   // MÉTODOS PARA MODAL DE DETALLES

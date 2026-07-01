@@ -53,27 +53,48 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/reenviar-codigo?correo=${encodeURIComponent(correo)}`, {});
   }
 
-  cerrarSesion(): void {
+  // Obtiene el token JWT real
+  obtenerToken(): string | null {
+    const usuarioStr = localStorage.getItem('cliente');
+    if (usuarioStr) {
+      const usuario = JSON.parse(usuarioStr);
+      return usuario.token || null;
+    }
+    return null;
+  }
+
+  estaAutenticado(): boolean {
+    return this.obtenerToken() !== null;
+  }
+
+  // Mantenido por compatibilidad si es llamado en otros lugares como estaLogueado
+  estaLogueado(): boolean {
+    return this.estaAutenticado();
+  }
+
+  obtenerUsuario(): any | null {
+    const usuario = localStorage.getItem('cliente');
+    return usuario ? JSON.parse(usuario) : null;
+  }
+
+  // Mantenido por compatibilidad
+  obtenerUsuarioActual(): any {
+    return this.obtenerUsuario();
+  }
+
+  // Obtiene el rol autenticado para que el roleGuard pueda autorizar rutas.
+  obtenerRol(): string | null {
+    const usuario = this.obtenerUsuario();
+    return usuario?.rol ? usuario.rol.toUpperCase() : null;
+  }
+
+  logout(): void {
     localStorage.removeItem('cliente');
   }
 
-  obtenerUsuarioActual(): any {
-
-    const usuario =
-      localStorage.getItem('cliente');
-
-    return usuario
-      ? JSON.parse(usuario)
-      : null;
-  }
-
-  estaLogueado(): boolean {
-    return localStorage.getItem('cliente') !== null;
-  }
-
-  obtenerRol(): string | null {
-    const usuario = this.obtenerUsuarioActual();
-    return usuario ? usuario.rol : null;
+  // Mantenido por compatibilidad
+  cerrarSesion(): void {
+    this.logout();
   }
 
   obtenerCreditos(): number {
