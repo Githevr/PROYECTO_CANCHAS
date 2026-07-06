@@ -53,6 +53,54 @@ public class ComplejoService {
         return canchaRepository.save(cancha);
     }
 
+    public void eliminarCancha(Long canchaId) {
+        canchaRepository.deleteById(canchaId);
+    }
+
+    @Transactional
+    public ComplejoDeportivo actualizarKybComplejo(Long id, ComplejoDeportivo nuevosDatos) {
+        ComplejoDeportivo existente = complejoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Complejo no encontrado"));
+
+        if (!"REJECTED".equals(existente.getEstadoVerificacion())) {
+            throw new RuntimeException("Solo se pueden corregir documentos de complejos rechazados.");
+        }
+
+        // Eliminar archivos físicos viejos
+        eliminarArchivoFisico(existente.getUrlLicencia());
+        eliminarArchivoFisico(existente.getUrlFichaRuc());
+        eliminarArchivoFisico(existente.getUrlDniRepresentante());
+        eliminarArchivoFisico(existente.getUrlDniReverso());
+
+        // Actualizar datos
+        existente.setRuc(nuevosDatos.getRuc());
+        existente.setRazonSocial(nuevosDatos.getRazonSocial());
+        existente.setUrlLicencia(nuevosDatos.getUrlLicencia());
+        existente.setUrlFichaRuc(nuevosDatos.getUrlFichaRuc());
+        existente.setUrlDniRepresentante(nuevosDatos.getUrlDniRepresentante());
+        existente.setUrlDniReverso(nuevosDatos.getUrlDniReverso());
+        
+        // Volver a poner en revisión
+        existente.setEstadoVerificacion("PENDING_VERIFICATION");
+
+        return complejoRepository.save(existente);
+    }
+
+    private void eliminarArchivoFisico(String url) {
+        if (url != null && url.startsWith("/uploads/kyb/")) {
+            String nombreArchivo = url.substring("/uploads/kyb/".length());
+            try {
+                java.nio.file.Path ruta = java.nio.file.Paths.get("uploads/kyb/" + nombreArchivo);
+                java.io.File archivo = ruta.toFile();
+                if (archivo.exists()) {
+                    archivo.delete();
+                }
+            } catch (Exception e) {
+                System.err.println("No se pudo eliminar el archivo viejo: " + nombreArchivo);
+            }
+        }
+    }
+
     public List<ComplejoDeportivo> obtenerComplejosPorPropietario(Long propietarioId) {
         return complejoRepository.findByPropietarioId(propietarioId);
     }

@@ -1,16 +1,14 @@
 <nav class="navbar custom-navbar navbar-expand-lg">
 
-  <div class="container">
+  <div class="container-fluid px-4">
 
     <!-- LOGO -->
-    <a class="navbar-brand d-flex align-items-center" routerLink="/">
-
+    <div class="navbar-brand d-flex align-items-center user-select-none">
       <img
         src="/images/logo.png"
         alt="PlayField"
         class="logo-img">
-
-    </a>
+    </div>
 
     <!-- MOBILE BUTTON -->
     <button
@@ -30,7 +28,7 @@
       <ul class="navbar-nav mx-auto">
 
         <!-- MENÚ JUGADOR / VISITANTE -->
-        <ng-container *ngIf="authService.obtenerRol() !== 'PROPIETARIO'">
+        <ng-container *ngIf="authService.obtenerRol() !== 'PROPIETARIO' && authService.obtenerRol() !== 'ADMIN'">
           <li class="nav-item">
             <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
               Inicio
@@ -53,7 +51,7 @@
           </li>
         </ng-container>
 
-        <!-- MENÚ PROPIETARIO ("SOY DUEÑO") -->
+        <!-- MENÚ PROPIETARIO -->
         <ng-container *ngIf="authService.obtenerRol() === 'PROPIETARIO'">
           <li class="nav-item">
             <a class="nav-link" routerLink="/propietario/dashboard" routerLinkActive="active">
@@ -68,6 +66,15 @@
           <li class="nav-item">
             <a class="nav-link" routerLink="/propietario/mis-creditos" routerLinkActive="active">
               Mis Créditos
+            </a>
+          </li>
+        </ng-container>
+
+        <!-- MENÚ ADMIN -->
+        <ng-container *ngIf="authService.obtenerRol() === 'ADMIN'">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/admin/dashboard" routerLinkActive="active">
+              <i class="bi bi-shield-lock-fill me-1"></i> Panel de Administración
             </a>
           </li>
         </ng-container>

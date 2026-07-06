@@ -29,7 +29,20 @@ public class ComplejoController {
             ComplejoDeportivo nuevoComplejo = complejoService.crearComplejo(complejo, propietarioId);
             return ResponseEntity.ok(nuevoComplejo);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    // Actualizar documentos KYB de un complejo rechazado
+    @PutMapping("/{id}/kyb")
+    public ResponseEntity<?> actualizarKybComplejo(
+            @PathVariable Long id,
+            @RequestBody ComplejoDeportivo datosActualizados) {
+        try {
+            ComplejoDeportivo actualizado = complejoService.actualizarKybComplejo(id, datosActualizados);
+            return ResponseEntity.ok(actualizado);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al actualizar KYB: " + e.getMessage());
         }
     }
 

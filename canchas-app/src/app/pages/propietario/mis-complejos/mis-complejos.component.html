@@ -1,25 +1,44 @@
 <app-navbar></app-navbar>
 
+<!-- =========================================================================
+     MODAL FLOTANTE: DOCUMENTOS RECHAZADOS
+     ========================================================================= -->
+<div class="modal-backdrop fade show" *ngIf="mostrarRechazoKyb" style="z-index: 1040;"></div>
+<div class="modal fade show d-block" tabindex="-1" *ngIf="mostrarRechazoKyb" style="z-index: 1050; background: rgba(0,0,0,0.6);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg border-top border-danger border-4 rounded-4 text-center p-4" style="animation: fadeIn 0.3s ease-in-out;">
+      <i class="bi bi-x-circle-fill text-danger mb-2" style="font-size: 4rem;"></i>
+      <h4 class="fw-bold mb-3">Documentos Rechazados</h4>
+      <p class="text-muted mb-4">El administrador ha revisado tus documentos y los ha <strong>rechazado</strong>. Por favor, inténtelo de nuevo subiendo documentos válidos o comuníquese con soporte.</p>
+      <button type="button" class="btn btn-danger fw-bold rounded-pill px-5 mx-auto" (click)="mostrarRechazoKyb = false">Entendido</button>
+    </div>
+  </div>
+</div>
+
+
+
 <div class="container owner-container">
   <!-- ENCABEZADO Y ACCIONES -->
   <div class="row align-items-center mb-4 g-3">
-    <div class="col-md-8">
-      <div class="d-flex align-items-center mb-2">
-        <i class="bi bi-building text-success fs-2 me-3"></i>
-        <h1 class="h2 mb-0 fw-bold">Mis Complejos Deportivos</h1>
-      </div>
-      <p class="text-muted mb-0">Publica tus complejos deportivos, añade sus canchas y configura tus datos de contacto y cobro directo.</p>
+    <div class="col-md-6 text-center text-md-start">
+      <h2 class="fw-bold text-dark m-0 d-flex align-items-center justify-content-center justify-content-md-start">
+        <i class="bi bi-buildings text-success me-3 fs-1"></i> 
+        Mis Complejos
+      </h2>
+      <p class="text-muted mb-0">Administra tus sedes, agrega canchas y edita sus configuraciones.</p>
     </div>
-    <div class="col-md-4 text-md-end">
-      <button class="btn btn-success btn-lg fw-bold shadow-sm" (click)="toggleFormComplejo()">
-        <i class="bi" [class.bi-plus-circle]="!mostrarFormComplejo" [class.bi-x-circle]="mostrarFormComplejo"></i>
-        {{ mostrarFormComplejo ? 'Cancelar Registro' : 'Registrar Complejo' }}
+    
+    <div class="col-md-6 text-center text-md-end">
+      <button class="btn btn-success fw-bold shadow-sm px-4 rounded-pill d-inline-flex align-items-center" (click)="toggleFormComplejo()" *ngIf="!mostrarFormComplejo">
+        <i class="bi bi-plus-lg me-2"></i> Nuevo Complejo
       </button>
     </div>
   </div>
 
+
+
   <!-- MENSAJES GENERALES -->
-  <div *ngIf="mensaje && complejoSeleccionadoParaCancha === null" class="alert p-3 rounded-3 mb-4" 
+  <div *ngIf="mensaje && complejoSeleccionadoParaCancha === null && !mostrarModalKyb" class="alert p-3 rounded-3 mb-4" 
        [class.alert-danger]="tipoMensaje === 'error'"
        [class.alert-success]="tipoMensaje === 'exito'">
     <i class="bi me-2" [class.bi-exclamation-triangle-fill]="tipoMensaje === 'error'" [class.bi-check-circle-fill]="tipoMensaje === 'exito'"></i>
@@ -27,7 +46,74 @@
   </div>
 
   <!-- =========================================================================
-       FORMULARIO: REGISTRAR COMPLEJO DEPORTIVO
+       PASO 1: VERIFICACIÓN KYB (INCRUSTADO)
+       ========================================================================= -->
+  <div class="card border-0 shadow-sm rounded-4 mb-5 border-warning border-3" *ngIf="mostrarModalKyb">
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center mb-4">
+        <i class="bi bi-shield-check text-warning fs-1 me-3"></i>
+        <div>
+          <h4 class="fw-bold mb-0">Paso 1: Verificación de Identidad (KYB)</h4>
+          <p class="text-muted mb-0">Para registrar tu complejo, necesitamos validar legalmente tu negocio. Sube los siguientes documentos.</p>
+        </div>
+      </div>
+
+      <!-- MENSAJE DE ERROR LOCAL -->
+      <div *ngIf="mensaje && tipoMensaje === 'error'" class="alert alert-danger p-2 rounded-3 mb-4 d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+        <span>{{ mensaje }}</span>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">RUC (11 dígitos) *</label>
+          <input type="text" class="form-control" [(ngModel)]="nuevoComplejo.ruc" placeholder="Ej: 20123456789" required maxlength="11">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Razón Social *</label>
+          <input type="text" class="form-control" [(ngModel)]="nuevoComplejo.razonSocial" placeholder="Ej: Canchas SAC" required>
+        </div>
+        
+        <!-- File Uploaders -->
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">1. Licencia de Funcionamiento *</label>
+          <input type="file" class="form-control" accept="image/*,.pdf" (change)="subirDocumentoKyb($event, 'licencia')">
+          <small class="text-success fw-bold mt-1 d-block" *ngIf="nuevoComplejo.urlLicencia"><i class="bi bi-check-circle-fill"></i> Archivo cargado correctamente</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">2. Ficha RUC (SUNAT) *</label>
+          <input type="file" class="form-control" accept="image/*,.pdf" (change)="subirDocumentoKyb($event, 'fichaRuc')">
+          <small class="text-success fw-bold mt-1 d-block" *ngIf="nuevoComplejo.urlFichaRuc"><i class="bi bi-check-circle-fill"></i> Archivo cargado correctamente</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">3. DNI del Representante Legal (Anverso) *</label>
+          <input type="file" class="form-control" accept="image/*,.pdf" (change)="subirDocumentoKyb($event, 'dniAnverso')">
+          <small class="text-success fw-bold mt-1 d-block" *ngIf="nuevoComplejo.urlDniRepresentante"><i class="bi bi-check-circle-fill"></i> Archivo cargado correctamente</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">4. DNI del Representante Legal (Reverso) *</label>
+          <input type="file" class="form-control" accept="image/*,.pdf" (change)="subirDocumentoKyb($event, 'dniReverso')">
+          <small class="text-success fw-bold mt-1 d-block" *ngIf="nuevoComplejo.urlDniReverso"><i class="bi bi-check-circle-fill"></i> Archivo cargado correctamente</small>
+        </div>
+      </div>
+
+      <!-- Spinner -->
+      <div class="text-center my-3" *ngIf="cargandoDocumentoKyb">
+        <div class="spinner-border text-warning" role="status"></div>
+        <p class="text-muted mt-2">Subiendo documento...</p>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-light fw-bold px-4 border" (click)="cancelarKyb()">Cancelar</button>
+        <button type="button" class="btn btn-warning fw-bold px-4 text-dark" (click)="continuarRegistroKyb()" [disabled]="cargandoDocumentoKyb">
+          Continuar al Paso 2 <i class="bi bi-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       PASO 2: FORMULARIO REGISTRAR COMPLEJO DEPORTIVO
        ========================================================================= -->
   <div class="card border-0 shadow-sm rounded-4 mb-5" *ngIf="mostrarFormComplejo">
     <div class="card-body p-4">
@@ -57,9 +143,49 @@
             <label class="form-label fw-semibold">Teléfono de Contacto (WhatsApp) *</label>
             <input type="text" class="form-control" [(ngModel)]="nuevoComplejo.telefonoContacto" name="telefonoContacto" placeholder="Ej: 987654321" required>
           </div>
-          <div class="col-md-4">
-            <label class="form-label fw-semibold">Datos para Cobro de Garantía (Yape/Plin) *</label>
-            <input type="text" class="form-control" [(ngModel)]="nuevoComplejo.yapePlinInfo" name="yapePlinInfo" placeholder="Ej: Yape: 987654321 (Juan Perez)" required>
+          <!-- DATOS DE COBRO -->
+          <div class="col-12 mt-3 mb-2">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Datos para Cobro de Garantía</h5>
+            <div class="row g-3">
+              <div class="col-md-12 mb-1">
+                <label class="form-label fw-semibold me-4">Método de cobro:</label>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="tipoCobro" id="cobroBilletera" value="billetera" [(ngModel)]="nuevoComplejo.tipoCobro">
+                  <label class="form-check-label fw-semibold text-muted" for="cobroBilletera">Billetera Digital</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="tipoCobro" id="cobroBanco" value="banco" [(ngModel)]="nuevoComplejo.tipoCobro">
+                  <label class="form-check-label fw-semibold text-muted" for="cobroBanco">Cuenta Bancaria (Manual)</label>
+                </div>
+              </div>
+
+              <!-- OPCION BILLETERA DIGITAL -->
+              <ng-container *ngIf="nuevoComplejo.tipoCobro === 'billetera'">
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold">Billetera Digital *</label>
+                  <select class="form-select" [(ngModel)]="nuevoComplejo.billeteraTipo" name="billeteraTipo">
+                    <option value="1">YAPE</option>
+                    <option value="2">PLIN</option>
+                    <option value="3">BIM</option>
+                    <option value="4">LEMON</option>
+                    <option value="5">PERPLEXITY</option>
+                    <option value="6">AGORA</option>
+                  </select>
+                </div>
+                <div class="col-md-8">
+                  <label class="form-label fw-semibold">Número receptor *</label>
+                  <input type="text" class="form-control" [(ngModel)]="nuevoComplejo.billeteraNumero" name="billeteraNumero" placeholder="Ej: 987654321">
+                </div>
+              </ng-container>
+
+              <!-- OPCION CUENTA BANCARIA -->
+              <ng-container *ngIf="nuevoComplejo.tipoCobro === 'banco'">
+                <div class="col-md-12">
+                  <label class="form-label fw-semibold">Datos de la Cuenta Bancaria *</label>
+                  <input type="text" class="form-control" [(ngModel)]="nuevoComplejo.bancoInfo" name="bancoInfo" placeholder="Ej: BBVA - 0011-0123-0100012345 (Juan Perez)">
+                </div>
+              </ng-container>
+            </div>
           </div>
 
           <div class="col-12">
@@ -81,11 +207,23 @@
           </div>
 
           <div class="col-12 mt-4 text-end">
-            <button type="button" class="btn btn-light fw-bold me-2" (click)="toggleFormComplejo()">Cancelar</button>
-            <button type="submit" class="btn btn-success fw-bold px-4 shadow-sm" [disabled]="cargando">
-              <span *ngIf="!cargando"><i class="bi bi-save me-2"></i> Guardar Complejo</span>
-              <span *ngIf="cargando" class="spinner-border spinner-border-sm me-2" role="status"></span>
-            </button>
+            <div class="d-flex justify-content-end align-items-center" *ngIf="!mostrarConfirmacionCancelarComplejo">
+              <button type="button" class="btn btn-light fw-bold me-2 px-4 border" (click)="intentarCancelarComplejo()">Cancelar</button>
+              <button type="submit" class="btn btn-success fw-bold px-4 shadow-sm" [disabled]="cargando">
+                <span *ngIf="!cargando"><i class="bi bi-save me-2"></i> Guardar Complejo</span>
+                <span *ngIf="cargando" class="spinner-border spinner-border-sm me-2" role="status"></span>
+              </button>
+            </div>
+
+            <!-- CONFIRMACION INLINE DE CANCELAR -->
+            <div *ngIf="mostrarConfirmacionCancelarComplejo" class="alert alert-warning border border-warning shadow-sm rounded-4 p-4 text-center w-100" style="animation: fadeIn 0.3s ease-in-out;">
+              <h5 class="fw-bold text-warning-emphasis mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>¿Deseas cancelar el registro?</h5>
+              <p class="text-dark mb-4">Se perderán todos los datos que hayas ingresado en este formulario.</p>
+              <div class="d-flex justify-content-center gap-3">
+                <button type="button" class="btn btn-outline-secondary fw-bold px-4 rounded-pill" (click)="mostrarConfirmacionCancelarComplejo = false">No, seguir editando</button>
+                <button type="button" class="btn btn-warning fw-bold px-4 rounded-pill shadow-sm text-dark" (click)="confirmarCancelarComplejo()">Sí, cancelar</button>
+              </div>
+            </div>
           </div>
         </div>
       </form>
@@ -98,6 +236,27 @@
   <div class="row g-4" *ngIf="complejos.length > 0">
     <div class="col-12" *ngFor="let comp of complejos">
       <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
+        <!-- BANNER DE REVISIÓN KYB -->
+        <div *ngIf="comp.estadoVerificacion === 'PENDING_VERIFICATION'" class="bg-warning text-dark p-3 text-center fw-bold border-bottom border-warning border-3 d-flex flex-column align-items-center justify-content-center">
+          <div class="d-flex align-items-center mb-1">
+            <i class="bi bi-hourglass-split me-2 fs-4"></i>
+            <span class="fs-5">DOCUMENTOS EN REVISIÓN</span>
+          </div>
+          <span class="small fw-normal">Tus canchas aún no serán visibles para los jugadores hasta que un administrador valide tus datos legales.</span>
+        </div>
+
+        <!-- BANNER DE RECHAZO KYB -->
+        <div *ngIf="comp.estadoVerificacion === 'REJECTED'" class="bg-danger text-white p-3 text-center fw-bold border-bottom border-danger border-3 d-flex flex-column align-items-center justify-content-center">
+          <div class="d-flex align-items-center mb-1">
+            <i class="bi bi-x-octagon-fill me-2 fs-4"></i>
+            <span class="fs-5">DOCUMENTOS RECHAZADOS</span>
+          </div>
+          <span class="small fw-normal mb-2">Tus documentos no pasaron la validación. Por favor, corrige la información para continuar.</span>
+          <button class="btn btn-light btn-sm fw-bold text-danger px-3 rounded-pill" (click)="abrirModalCorrecionKyb(comp)">
+            <i class="bi bi-pencil-square me-1"></i> Corregir Documentos KYB
+          </button>
+        </div>
+        
         <div class="row g-0">
           <!-- DETALLES DEL COMPLEJO -->
           <div class="col-lg-4 bg-light p-4 border-end">
@@ -163,6 +322,7 @@
                     <option value="Básquet">Básquet</option>
                     <option value="Voley">Voley</option>
                     <option value="Tenis">Tenis</option>
+                    <option value="Balonmano">Balonmano</option>
                   </select>
                 </div>
               </div>
@@ -276,4 +436,94 @@
     </div>
   </div>
 
+</div>
+
+<!-- =========================================================================
+     MODAL FLOTANTE: CORRECCIÓN DE DOCUMENTOS KYB
+     ========================================================================= -->
+<div class="modal-backdrop fade show" *ngIf="mostrarModalCorrecionKyb" style="z-index: 1060;"></div>
+<div class="modal fade show d-block" tabindex="-1" *ngIf="mostrarModalCorrecionKyb" style="z-index: 1070; background: rgba(0,0,0,0.6); overflow-y: auto;">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style="animation: fadeIn 0.3s ease-in-out;">
+      
+      <!-- CABECERA -->
+      <div class="bg-success text-white p-4 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-shield-check fs-2 me-3"></i>
+          <div>
+            <h4 class="fw-bold mb-0">Corrección de Verificación de Identidad (KYB)</h4>
+            <p class="mb-0 small text-success-subtle">Vuelve a enviar tus datos legales obligatorios</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" (click)="cerrarModalCorrecionKyb()"></button>
+      </div>
+
+      <!-- CUERPO -->
+      <div class="p-4 bg-light">
+        <div class="alert alert-info border-0 rounded-3 mb-4 d-flex align-items-center shadow-sm">
+          <i class="bi bi-info-circle-fill fs-4 text-info me-3"></i>
+          <span class="small">Has clickado para corregir tus documentos. <strong>IMPORTANTE:</strong> Debes subir los 4 documentos nuevos obligatoriamente. Los antiguos han sido eliminados por seguridad.</span>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label class="form-label fw-bold text-dark small mb-1">Número de RUC (11 dígitos) <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-lg bg-white border-0 shadow-sm" [(ngModel)]="complejoCorrecionKyb.ruc" placeholder="Ej. 20123456789" maxlength="11">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold text-dark small mb-1">Razón Social <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-lg bg-white border-0 shadow-sm" [(ngModel)]="complejoCorrecionKyb.razonSocial" placeholder="Nombre de la empresa o persona">
+          </div>
+
+          <!-- DOCUMENTOS OBLIGATORIOS -->
+          <div class="col-12 mt-4">
+            <h6 class="fw-bold text-success mb-3 border-bottom pb-2"><i class="bi bi-folder-check me-2"></i> Documentos Obligatorios (Sube los 4 nuevamente)</h6>
+          </div>
+
+          <div class="col-md-6">
+            <div class="p-3 bg-white rounded-3 shadow-sm border border-light">
+              <label class="form-label fw-bold small text-dark mb-2"><i class="bi bi-file-earmark-pdf text-danger me-1"></i> Licencia Municipal <span class="text-danger">*</span></label>
+              <input type="file" class="form-control form-control-sm" (change)="subirDocumentoCorrecion($event, 'licencia')" accept="image/*,application/pdf">
+              <div class="mt-2 text-success small fw-bold" *ngIf="complejoCorrecionKyb.urlLicencia"><i class="bi bi-check-circle-fill me-1"></i> Archivo cargado</div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="p-3 bg-white rounded-3 shadow-sm border border-light">
+              <label class="form-label fw-bold small text-dark mb-2"><i class="bi bi-file-earmark-pdf text-danger me-1"></i> Ficha RUC <span class="text-danger">*</span></label>
+              <input type="file" class="form-control form-control-sm" (change)="subirDocumentoCorrecion($event, 'ruc')" accept="image/*,application/pdf">
+              <div class="mt-2 text-success small fw-bold" *ngIf="complejoCorrecionKyb.urlFichaRuc"><i class="bi bi-check-circle-fill me-1"></i> Archivo cargado</div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="p-3 bg-white rounded-3 shadow-sm border border-light">
+              <label class="form-label fw-bold small text-dark mb-2"><i class="bi bi-person-vcard text-primary me-1"></i> DNI Representante (Anverso) <span class="text-danger">*</span></label>
+              <input type="file" class="form-control form-control-sm" (change)="subirDocumentoCorrecion($event, 'dniAnverso')" accept="image/*,application/pdf">
+              <div class="mt-2 text-success small fw-bold" *ngIf="complejoCorrecionKyb.urlDniRepresentante"><i class="bi bi-check-circle-fill me-1"></i> Archivo cargado</div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="p-3 bg-white rounded-3 shadow-sm border border-light">
+              <label class="form-label fw-bold small text-dark mb-2"><i class="bi bi-person-vcard text-primary me-1"></i> DNI Representante (Reverso) <span class="text-danger">*</span></label>
+              <input type="file" class="form-control form-control-sm" (change)="subirDocumentoCorrecion($event, 'dniReverso')" accept="image/*,application/pdf">
+              <div class="mt-2 text-success small fw-bold" *ngIf="complejoCorrecionKyb.urlDniReverso"><i class="bi bi-check-circle-fill me-1"></i> Archivo cargado</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- PIE DE MODAL -->
+      <div class="p-4 bg-white border-top text-end">
+        <button type="button" class="btn btn-light fw-bold px-4 me-2 rounded-pill shadow-sm text-dark" (click)="cerrarModalCorrecionKyb()" [disabled]="cargando">Cancelar</button>
+        <button type="button" class="btn btn-success fw-bold px-5 rounded-pill shadow-sm" (click)="guardarCorrecionKyb()" [disabled]="cargando || cargandoDocumentoKyb">
+          <span *ngIf="cargando" class="spinner-border spinner-border-sm me-2"></span>
+          Enviar Corrección
+        </button>
+      </div>
+
+    </div>
+  </div>
 </div>

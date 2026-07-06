@@ -98,6 +98,20 @@ public class ReservaController {
         }
     }
 
+    // Endpoint para que el jugador cancele voluntariamente (rollback) su reserva PENDIENTE_ADELANTO
+    @DeleteMapping("/{id}/cancelar")
+    public ResponseEntity<?> cancelarReserva(
+            @PathVariable Long id,
+            @RequestParam Long clienteId
+    ) {
+        try {
+            reservaService.cancelarReservaJugador(id, clienteId);
+            return ResponseEntity.ok().body("Reserva cancelada exitosamente.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     // =========================================================================
     // REPORTE DE CONTROVERSIA (El jugador reporta que pagó y no le confirmaron)
     // Requiere al menos 1 evidencia obligatoria (fotos, capturas de conversación)

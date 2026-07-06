@@ -20,6 +20,8 @@
   transform: scale(3.5);
 
   transform-origin: left center;
+
+  margin-right: 80px;
 }
 
 /* MENU */

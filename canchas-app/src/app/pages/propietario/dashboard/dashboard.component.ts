@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms'; // Habilita ngModel para el modal 
 import { NavbarComponent } from '../../../components/navbar/navbar.component';
 import { AuthService } from '../../../services/auth.service';
 import { ReservaService } from '../../../services/reserva.service';
+import { HttpClient } from '@angular/common/http';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -33,9 +35,22 @@ export class DashboardComponent implements OnInit {
   checkIngresoVerificado: boolean = false;
   checkMontoCorrecto: boolean = false;
 
+  // Strikes y Apelaciones
+  strikes: any[] = [];
+  mostrarModalApelacion: boolean = false;
+  strikeParaApelar: any = null;
+  motivoApelacion: string = '';
+  evidenciaApelacionFile: File | null = null;
+  enviandoApelacion: boolean = false;
+  mostrarAlertaStrikes: boolean = false;
+  strikesPendientesCount: number = 0;
+  mostrarNotificaciones: boolean = false;
+
   constructor(
     public authService: AuthService,
-    private reservaService: ReservaService
+    private reservaService: ReservaService,
+    private http: HttpClient,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -43,7 +58,14 @@ export class DashboardComponent implements OnInit {
     if (usuario) {
       this.propietarioId = usuario.id;
       this.cargarReservas();
+      this.cargarStrikes();
     }
+  }
+
+  getFullUrl(path: string): string {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    return `http://localhost:8080${path.startsWith('/') ? '' : '/'}${path}`;
   }
 
   cargarReservas(): void {
@@ -152,5 +174,107 @@ export class DashboardComponent implements OnInit {
       this.cerrarValidacion();
       this.confirmarAdelanto(id);
     }
+  }
+
+  // =========================================================================
+  // MÉTODOS: Strikes y Apelaciones
+  // =========================================================================
+
+  cargarStrikes() {
+    this.http.get<any[]>(`http://localhost:8080/api/strikes/propietario/${this.propietarioId}`).subscribe({
+      next: (data) => {
+        this.strikes = data;
+        const emitidos = this.strikes.filter(s => s.estado === 'EMITIDO');
+        if (emitidos.length > 0) {
+          this.toastService.mostrar(`Tienes ${emitidos.length} strike(s) nuevo(s) por revisar. Por favor apélalos.`, 'error');
+          this.mostrarAlertaStrikes = true;
+          this.strikesPendientesCount = emitidos.length;
+        }
+      },
+      error: (err) => console.error('Error cargando strikes', err)
+    });
+  }
+
+  get strikesEmitidos(): any[] {
+    return this.strikes.filter(s => s.estado === 'EMITIDO');
+  }
+
+  get strikesActivosCount(): number {
+    return this.strikes.filter(s => ['EMITIDO', 'APELADO', 'MANTENIDO'].includes(s.estado)).length;
+  }
+
+  scrollAStrikes(): void {
+    this.mostrarNotificaciones = false; // cerrar menu si estaba abierto
+    const el = document.getElementById('panel-strikes');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  toggleNotificaciones(): void {
+    this.mostrarNotificaciones = !this.mostrarNotificaciones;
+  }
+
+  abrirApelacion(strike: any) {
+    this.strikeParaApelar = strike;
+    this.mostrarModalApelacion = true;
+    this.motivoApelacion = '';
+    this.evidenciaApelacionFile = null;
+  }
+
+  cerrarApelacion() {
+    this.mostrarModalApelacion = false;
+    this.strikeParaApelar = null;
+  }
+
+  onApelacionFileSelected(event: any) {
+    this.evidenciaApelacionFile = event.target.files[0];
+  }
+
+  enviarApelacion() {
+    if (!this.motivoApelacion.trim()) {
+      this.toastService.mostrar('Debes escribir un motivo de apelación.', 'error');
+      return;
+    }
+
+    this.enviandoApelacion = true;
+
+    if (this.evidenciaApelacionFile) {
+      const formData = new FormData();
+      formData.append('file', this.evidenciaApelacionFile);
+      this.http.post<any>('http://localhost:8080/api/reportes/upload', formData).subscribe({
+        next: (res) => this.enviarPeticionApelacion(res.url),
+        error: () => {
+          this.toastService.mostrar('Error al subir evidencia de apelación.', 'error');
+          this.enviandoApelacion = false;
+        }
+      });
+    } else {
+      this.enviarPeticionApelacion('');
+    }
+  }
+
+  private enviarPeticionApelacion(urlEvidencia: string) {
+    const payload = new URLSearchParams();
+    payload.set('propietarioId', this.propietarioId.toString());
+    payload.set('motivoApelacion', this.motivoApelacion);
+    if (urlEvidencia) {
+      payload.set('urlEvidenciaApelacion', urlEvidencia);
+    }
+
+    this.http.post(`http://localhost:8080/api/strikes/${this.strikeParaApelar.id}/apelar`, payload.toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    }).subscribe({
+      next: () => {
+        this.toastService.mostrar('Apelación enviada correctamente.', 'success');
+        this.cargarStrikes();
+        this.cerrarApelacion();
+        this.enviandoApelacion = false;
+      },
+      error: (err) => {
+        this.toastService.mostrar('Error enviando apelación: ' + err.error, 'error');
+        this.enviandoApelacion = false;
+      }
+    });
   }
 }

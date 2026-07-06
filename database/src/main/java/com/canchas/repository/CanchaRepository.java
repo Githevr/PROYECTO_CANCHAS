@@ -14,7 +14,7 @@ public interface CanchaRepository extends JpaRepository<Canchas, Long> {
     // Listar todas las canchas que pertenecen a un complejo deportivo específico
     List<Canchas> findByComplejoId(Long complejoId);
 
-    // Filtrar canchas activas que pertenecen a un complejo y cuyo dueño tiene créditos
-    @Query("SELECT c FROM Canchas c WHERE c.complejo IS NOT NULL AND c.complejo.propietario.creditos > 0.00")
+    // Filtrar canchas activas que pertenecen a un complejo activo y cuyo dueño tiene créditos
+    @Query("SELECT c FROM Canchas c WHERE c.complejo IS NOT NULL AND c.complejo.activo = true AND c.complejo.propietario.creditos > 0.00")
     List<Canchas> findActiveCanchas();
 }

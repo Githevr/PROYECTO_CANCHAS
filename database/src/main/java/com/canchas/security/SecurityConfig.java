@@ -54,7 +54,7 @@ public class SecurityConfig {
                 // Endpoints Públicos (Login, Registro, Confirmar correo)
                 .requestMatchers("/clientes/login", "/clientes", "/clientes/confirmar", "/clientes/reenviar-codigo").permitAll()
                 .requestMatchers(HttpMethod.GET, "/canchas/**", "/complejos/**").permitAll()
-                .requestMatchers("/api/canchas/upload").permitAll()
+                .requestMatchers("/api/canchas/upload", "/api/kyb/upload", "/api/reportes/upload").permitAll()
                 
                 // Endpoints exclusivos del ADMIN (tiene control total del sistema)
                 .requestMatchers("/admin/**").hasAuthority("ADMIN")

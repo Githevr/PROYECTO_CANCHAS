@@ -4,9 +4,47 @@
   <!-- ENCABEZADO DE SECCIÓN -->
   <div class="row mb-4">
     <div class="col-12">
-      <div class="d-flex align-items-center mb-2">
-        <i class="bi bi-speedometer2 text-success fs-2 me-3"></i>
-        <h1 class="h2 mb-0 fw-bold">Panel de Control de Reservas</h1>
+      <div class="d-flex align-items-center mb-2 justify-content-between">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-speedometer2 text-success fs-2 me-3"></i>
+          <h1 class="h2 mb-0 fw-bold">Panel de Control de Reservas</h1>
+        </div>
+        
+        <!-- Notificaciones de Strikes -->
+        <div class="dropdown" style="position: relative;">
+          <button class="btn btn-dark position-relative p-2 rounded-circle border-secondary border-opacity-50" type="button" 
+                  (click)="toggleNotificaciones()" style="width: 45px; height: 45px;">
+            <i class="bi bi-bell-fill fs-5" [ngClass]="{'text-danger animate-bounce': strikesEmitidos.length > 0}"></i>
+            <span *ngIf="strikesEmitidos.length > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark">
+              {{ strikesEmitidos.length }}
+            </span>
+          </button>
+          <ul class="dropdown-menu shadow-lg border-0 mt-2 p-0" 
+              [class.show]="mostrarNotificaciones" 
+              style="position: absolute; top: 100%; right: 0; left: auto; z-index: 1050; width: 320px; overflow: hidden; border-radius: 12px; background-color: #212529;">
+            <li class="bg-danger text-white px-3 py-2 fw-bold text-center border-bottom border-danger">Notificaciones de Penalización</li>
+            
+            <li *ngIf="strikesEmitidos.length === 0" class="px-3 py-4 text-center text-white-50">
+              <i class="bi bi-bell-slash fs-3 d-block mb-2"></i>
+              No tienes nuevas notificaciones
+            </li>
+            
+            <ng-container *ngFor="let strike of strikesEmitidos">
+              <li>
+                <a class="dropdown-item px-3 py-3 border-bottom border-secondary border-opacity-25" href="javascript:void(0)" (click)="scrollAStrikes()">
+                  <div class="d-flex align-items-start">
+                    <i class="bi bi-exclamation-octagon-fill text-danger fs-4 me-3 mt-1"></i>
+                    <div>
+                      <strong class="d-block text-white">¡Nuevo Strike Emitido!</strong>
+                      <small class="text-white-50 d-block text-wrap">Complejo: {{ strike.complejo?.nombre }}</small>
+                      <small class="text-warning fw-bold mt-1 d-block"><i class="bi bi-shield-exclamation"></i> Requiere tu apelación</small>
+                    </div>
+                  </div>
+                </a>
+              </li>
+            </ng-container>
+          </ul>
+        </div>
       </div>
       <p class="text-muted">Supervisa y gestiona las reservas de tus canchas, confirma adelantos de garantía y libera turnos por inasistencia.</p>
     </div>
@@ -15,7 +53,7 @@
   <!-- TARJETAS DE ANALÍTICAS / METRICAS RÁPIDAS -->
   <div class="row g-4 mb-5">
     <!-- RESERVAS TOTALES -->
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="card border-0 shadow-sm rounded-4 p-3 d-flex flex-row align-items-center bg-white">
         <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-4 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
           <i class="bi bi-calendar-event fs-4"></i>
@@ -28,7 +66,7 @@
     </div>
 
     <!-- PENDIENTES DE ADELANTO -->
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="card border-0 shadow-sm rounded-4 p-3 d-flex flex-row align-items-center bg-white">
         <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-4 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
           <i class="bi bi-hourglass-split fs-4"></i>
@@ -41,7 +79,7 @@
     </div>
 
     <!-- CRÉDITOS PLATAFORMA -->
-    <div class="col-md-4" routerLink="/propietario/mis-creditos" style="cursor: pointer;">
+    <div class="col-md-3" routerLink="/propietario/mis-creditos" style="cursor: pointer;">
       <div class="card border-0 shadow-sm rounded-4 p-3 d-flex flex-row align-items-center bg-white border-hover-success">
         <div class="bg-success bg-opacity-10 text-success p-3 rounded-4 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
           <i class="bi bi-wallet2 fs-4"></i>
@@ -49,6 +87,19 @@
         <div>
           <span class="text-muted small fw-semibold text-uppercase d-block" style="letter-spacing: 0.5px;">Créditos de Plataforma</span>
           <span class="fs-3 fw-bold text-success">S/ {{ authService.obtenerCreditos() | number:'1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STRIKES ACUMULADOS -->
+    <div class="col-md-3" (click)="scrollAStrikes()" style="cursor: pointer;">
+      <div class="card border-0 shadow-sm rounded-4 p-3 d-flex flex-row align-items-center bg-white border-hover-danger">
+        <div class="bg-danger bg-opacity-10 text-danger p-3 rounded-4 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+          <i class="bi bi-shield-x fs-4"></i>
+        </div>
+        <div>
+          <span class="text-muted small fw-semibold text-uppercase d-block" style="letter-spacing: 0.5px;">Strikes Activos</span>
+          <span class="fs-3 fw-bold text-danger">{{ strikesActivosCount }} <small class="fs-6 text-muted">/ 3</small></span>
         </div>
       </div>
     </div>
@@ -344,6 +395,129 @@
           </button>
         </div>
 
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL DE STRIKES -->
+  <div id="panel-strikes" class="row mb-5 mt-5">
+    <div class="col-12">
+      <h3 class="fw-bold mb-3 text-danger"><i class="bi bi-shield-x"></i> Panel de Strikes y Penalizaciones</h3>
+      <div class="alert alert-warning border border-warning border-opacity-50 text-dark p-3 rounded-4 mb-4 d-flex align-items-center">
+        <i class="bi bi-info-circle-fill fs-4 me-3 text-warning"></i>
+        <div class="small">
+          <strong class="d-block">Regla de Apelación de 24 Horas:</strong>
+          Tienes un plazo máximo de 24 horas desde la emisión del strike para enviar tu apelación con evidencia. Si no apelas, el strike cambiará al estado <span class="badge bg-secondary">MANTENIDO</span> automáticamente y ya no podrás apelar después.
+        </div>
+      </div>
+      <div class="card shadow-sm border-0 rounded-4 p-3 bg-dark">
+        <div class="table-responsive">
+          <table class="table table-dark table-hover mb-0 align-middle">
+            <thead>
+              <tr class="text-uppercase small fw-bold text-muted letter-spacing-1">
+                <th>Complejo</th>
+                <th>Fecha Emisión</th>
+                <th>Motivo Admin</th>
+                <th>Estado</th>
+                <th class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let strike of strikes">
+                <td><strong class="text-white">{{ strike.complejo?.nombre }}</strong></td>
+                <td class="text-white-50">{{ strike.fechaEmision | date:'dd/MM/yyyy' }}</td>
+                <td class="text-white-50">
+                  <div class="mb-2"><strong>Resolución del Admin:</strong> {{ strike.motivoAdmin }}</div>
+                  
+                  <div *ngIf="strike.reporte" class="bg-black bg-opacity-25 p-2 rounded-3 border border-secondary border-opacity-50 mt-3 mb-2">
+                    <div class="text-warning small fw-bold mb-1"><i class="bi bi-person-fill-exclamation"></i> Motivo del Jugador:</div>
+                    <p class="small mb-2 text-white-50 fst-italic">"{{ strike.reporte.motivo }}"</p>
+                    
+                    <div class="d-flex flex-wrap gap-1">
+                      <a *ngIf="strike.reporte.urlEvidencia1" [href]="getFullUrl(strike.reporte.urlEvidencia1)" target="_blank" class="badge bg-info text-dark text-decoration-none px-2 py-1">
+                        <i class="bi bi-image"></i> Evid. 1
+                      </a>
+                      <a *ngIf="strike.reporte.urlEvidencia2" [href]="getFullUrl(strike.reporte.urlEvidencia2)" target="_blank" class="badge bg-info text-dark text-decoration-none px-2 py-1">
+                        <i class="bi bi-image"></i> Evid. 2
+                      </a>
+                      <a *ngIf="strike.reporte.urlEvidencia3" [href]="getFullUrl(strike.reporte.urlEvidencia3)" target="_blank" class="badge bg-info text-dark text-decoration-none px-2 py-1">
+                        <i class="bi bi-image"></i> Evid. 3
+                      </a>
+                    </div>
+                  </div>
+
+                  <div *ngIf="strike.urlEvidenciaAdmin" class="mt-2">
+                    <a [href]="getFullUrl(strike.urlEvidenciaAdmin)" target="_blank" class="btn btn-sm btn-outline-info">
+                      <i class="bi bi-image"></i> Ver Prueba del Admin
+                    </a>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge px-3 py-2 fs-6 rounded-pill border"
+                        [ngClass]="{
+                          'bg-danger text-white border-danger': strike.estado === 'EMITIDO',
+                          'bg-warning bg-opacity-10 text-warning border-warning border-opacity-25': strike.estado === 'APELADO',
+                          'bg-success bg-opacity-10 text-success border-success border-opacity-25': strike.estado === 'REVOCADO',
+                          'bg-secondary bg-opacity-10 text-secondary border-secondary border-opacity-25': strike.estado === 'MANTENIDO'
+                        }">
+                    <i class="bi me-1" [ngClass]="{
+                      'bi-exclamation-triangle-fill': strike.estado === 'EMITIDO',
+                      'bi-clock-history': strike.estado === 'APELADO',
+                      'bi-check-circle-fill': strike.estado === 'REVOCADO',
+                      'bi-x-octagon-fill': strike.estado === 'MANTENIDO'
+                    }"></i>
+                    {{ strike.estado }}
+                  </span>
+                </td>
+                <td class="text-end">
+                  <button class="btn btn-sm btn-outline-warning fw-bold px-3 py-2 rounded-pill" *ngIf="strike.estado === 'EMITIDO'" (click)="abrirApelacion(strike)">
+                    <i class="bi bi-shield-exclamation me-1"></i> Apelar Strike
+                  </button>
+                  <span class="text-muted small" *ngIf="strike.estado !== 'EMITIDO'">No disponible</span>
+                </td>
+              </tr>
+              <tr *ngIf="strikes.length === 0">
+                <td colspan="5" class="text-center py-5 text-muted">
+                  <i class="bi bi-shield-check display-4 d-block mb-3 text-success opacity-50"></i>
+                  Excelente. No tienes ningún strike ni penalización.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL APELAR STRIKE -->
+  <div class="modal fade show" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);" *ngIf="mostrarModalApelacion">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg bg-dark text-white">
+        <div class="modal-header bg-warning text-dark border-0">
+          <h5 class="modal-title fw-bold"><i class="bi bi-shield-exclamation me-2"></i> Apelar Strike</h5>
+          <button type="button" class="btn-close" (click)="cerrarApelacion()"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p class="text-white-50 small mb-4">
+            Envía tus pruebas para defenderte de esta penalización. El administrador las revisará y decidirá si revoca el strike o lo mantiene.
+          </p>
+          <div class="mb-4">
+            <label class="form-label fw-bold text-white">Motivo de la Apelación</label>
+            <textarea class="form-control bg-dark text-white border-secondary" rows="4" [(ngModel)]="motivoApelacion" placeholder="Explica por qué consideras que el reporte del jugador fue injusto..."></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-white">Evidencia (Opcional, pero recomendado)</label>
+            <input type="file" class="form-control bg-dark text-white border-secondary" (change)="onApelacionFileSelected($event)" accept="image/*,.pdf">
+            <small class="text-white-50 mt-2 d-block">Sube capturas de pantalla de WhatsApp, transferencias, o fotos de las instalaciones.</small>
+          </div>
+        </div>
+        <div class="modal-footer border-secondary border-opacity-10 bg-black bg-opacity-25">
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="cerrarApelacion()">Cancelar</button>
+          <button type="button" class="btn btn-warning fw-bold text-dark rounded-pill px-4 shadow-sm" (click)="enviarApelacion()" [disabled]="enviandoApelacion">
+            <span *ngIf="!enviandoApelacion"><i class="bi bi-send-fill me-2"></i> Enviar Apelación</span>
+            <span *ngIf="enviandoApelacion">Subiendo... <i class="spinner-border spinner-border-sm text-dark ms-2"></i></span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

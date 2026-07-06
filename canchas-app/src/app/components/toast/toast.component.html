@@ -1,0 +1,8 @@
+<div *ngIf="toast.visible" class="alert alert-dismissible shadow-lg fw-bold d-flex align-items-center"
+     [ngClass]="{'alert-success border-success': toast.tipo === 'success', 'alert-danger border-danger': toast.tipo === 'error'}"
+     style="position: fixed; top: 90px; right: 20px; z-index: 999999; min-width: 300px; max-width: 450px; animation: fadeIn 0.3s ease-in-out;">
+  <i class="bi fs-4 me-3"
+     [ngClass]="{'bi-check-circle-fill text-success': toast.tipo === 'success', 'bi-x-octagon-fill text-danger': toast.tipo === 'error'}"></i>
+  <span class="flex-grow-1">{{ toast.mensaje }}</span>
+  <button type="button" class="btn-close" (click)="cerrar()"></button>
+</div>

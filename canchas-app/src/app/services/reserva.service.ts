@@ -68,6 +68,11 @@ export class ReservaService {
     return this.http.post(`${this.apiUrl}/${reservaId}/liberar?propietarioId=${propietarioId}`, {});
   }
 
+  // Cancelar reserva voluntariamente (Jugador)
+  cancelarReserva(reservaId: number, clienteId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${reservaId}/cancelar?clienteId=${clienteId}`, { responseType: 'text' });
+  }
+
   // Calificaciones
   getReservaPendienteCalificar(clienteId: number): Observable<any> {
     return this.http.get<any>(`http://localhost:8080/calificaciones/pendiente/${clienteId}`);

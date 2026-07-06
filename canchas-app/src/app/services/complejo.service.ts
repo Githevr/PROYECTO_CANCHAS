@@ -21,6 +21,11 @@ export class ComplejoService {
     return this.http.post(`${this.apiUrl}/${complejoId}/canchas`, cancha);
   }
 
+  // Actualizar documentos KYB de un complejo rechazado
+  actualizarKybComplejo(complejoId: number, datosActualizados: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${complejoId}/kyb`, datosActualizados);
+  }
+
   // Listar los complejos deportivos de un propietario
   obtenerComplejosPropietario(propietarioId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/propietario/${propietarioId}`);
@@ -54,5 +59,17 @@ export class ComplejoService {
   // Eliminar una imagen del servidor
   eliminarImagenCancha(url: string): Observable<any> {
     return this.http.delete(`http://localhost:8080/api/canchas/upload?url=${encodeURIComponent(url)}`);
+  }
+
+  // Subir un documento KYB al servidor
+  subirDocumentoKyb(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post('http://localhost:8080/api/kyb/upload', formData);
+  }
+
+  // Eliminar un documento KYB del servidor
+  eliminarDocumentoKyb(url: string): Observable<any> {
+    return this.http.delete(`http://localhost:8080/api/kyb/upload?url=${encodeURIComponent(url)}`);
   }
 }

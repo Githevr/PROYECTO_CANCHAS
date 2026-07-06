@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from '../../../components/navbar/navbar.component';
 import { AuthService } from '../../../services/auth.service';
 import { ComplejoService } from '../../../services/complejo.service';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-mis-complejos',
@@ -20,6 +21,15 @@ export class MisComplejosComponent implements OnInit {
 
   // Formulario de Complejo
   mostrarFormComplejo: boolean = false;
+  mostrarConfirmacionCancelarComplejo: boolean = false;
+  mostrarModalKyb: boolean = false;
+  cargandoDocumentoKyb: boolean = false;
+  mostrarRechazoKyb: boolean = false;
+  
+  // Corrección KYB
+  mostrarModalCorrecionKyb: boolean = false;
+  complejoCorrecionKyb: any = null;
+  
   nuevoComplejo: any = {
     nombre: '',
     direccion: '',
@@ -27,7 +37,17 @@ export class MisComplejosComponent implements OnInit {
     telefonoContacto: '',
     yapePlinInfo: '',
     descripcion: '',
-    imagenPrincipal: ''
+    imagenPrincipal: '',
+    tipoCobro: 'billetera',
+    bancoInfo: '',
+    billeteraTipo: '1',
+    billeteraNumero: '',
+    ruc: '',
+    razonSocial: '',
+    urlLicencia: '',
+    urlFichaRuc: '',
+    urlDniRepresentante: '',
+    urlDniReverso: ''
   };
 
   // Checkboxes de Beneficios
@@ -58,8 +78,9 @@ export class MisComplejosComponent implements OnInit {
   cargando: boolean = false;
 
   constructor(
-    private authService: AuthService,
-    private complejoService: ComplejoService
+    public authService: AuthService,
+    private complejoService: ComplejoService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -75,7 +96,21 @@ export class MisComplejosComponent implements OnInit {
       next: (res) => {
         this.complejos = res;
         // Cargar canchas para cada complejo de forma asíncrona
-        this.complejos.forEach(c => this.cargarCanchasComplejo(c.id));
+        this.complejos.forEach(c => {
+          this.cargarCanchasComplejo(c.id);
+          // Si algún complejo fue rechazado, mostrar el modal de aviso temporal
+          if (c.estadoVerificacion === 'REJECTED') {
+            this.mostrarRechazoKyb = true;
+            setTimeout(() => {
+              this.mostrarRechazoKyb = false;
+            }, 15000);
+          }
+          // Si fue aprobado y no hemos mostrado el mensaje en esta sesión
+          if (c.estadoVerificacion === 'VERIFIED' && !sessionStorage.getItem('felicidades_kyb_' + c.id)) {
+            sessionStorage.setItem('felicidades_kyb_' + c.id, 'true');
+            this.toastService.mostrar('¡Felicidades! Tus documentos han sido aprobados. 🎉', 'success');
+          }
+        });
       },
       error: (err) => console.error('Error al cargar complejos:', err)
     });
@@ -91,11 +126,120 @@ export class MisComplejosComponent implements OnInit {
   }
 
   toggleFormComplejo(): void {
-    this.mostrarFormComplejo = !this.mostrarFormComplejo;
+    if (!this.mostrarFormComplejo && !this.mostrarModalKyb) {
+      this.mostrarModalKyb = true; // Abrir modal KYB primero
+    } else {
+      this.mostrarFormComplejo = false;
+      this.mostrarModalKyb = false;
+    }
+    this.mensaje = '';
+    this.mostrarConfirmacionCancelarComplejo = false;
+  }
+
+  cancelarKyb(): void {
+    this.mostrarModalKyb = false;
     this.mensaje = '';
   }
 
+  continuarRegistroKyb(): void {
+    if (!this.nuevoComplejo.ruc || String(this.nuevoComplejo.ruc).length !== 11) {
+      this.mensaje = 'El RUC es obligatorio y debe tener exactamente 11 dígitos.';
+      this.tipoMensaje = 'error';
+      return;
+    }
+    if (!this.nuevoComplejo.razonSocial) {
+      this.mensaje = 'La Razón Social es obligatoria.';
+      this.tipoMensaje = 'error';
+      return;
+    }
+    if (!this.nuevoComplejo.urlLicencia) {
+      this.mensaje = 'Falta subir la Licencia de Funcionamiento.';
+      this.tipoMensaje = 'error';
+      return;
+    }
+    if (!this.nuevoComplejo.urlFichaRuc) {
+      this.mensaje = 'Falta subir la Ficha RUC.';
+      this.tipoMensaje = 'error';
+      return;
+    }
+    if (!this.nuevoComplejo.urlDniRepresentante) {
+      this.mensaje = 'Falta subir el DNI (Anverso).';
+      this.tipoMensaje = 'error';
+      return;
+    }
+    if (!this.nuevoComplejo.urlDniReverso) {
+      this.mensaje = 'Falta subir el DNI (Reverso).';
+      this.tipoMensaje = 'error';
+      return;
+    }
+    
+    
+    this.mostrarModalKyb = false;
+    this.mostrarFormComplejo = true;
+    this.mensaje = '';
+  }
+
+  subirDocumentoKyb(event: any, tipoDocumento: string): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.cargandoDocumentoKyb = true;
+      this.complejoService.subirDocumentoKyb(file).subscribe({
+        next: (res) => {
+          this.cargandoDocumentoKyb = false;
+          if (tipoDocumento === 'licencia') this.nuevoComplejo.urlLicencia = res.url;
+          else if (tipoDocumento === 'fichaRuc') this.nuevoComplejo.urlFichaRuc = res.url;
+          else if (tipoDocumento === 'dniAnverso') this.nuevoComplejo.urlDniRepresentante = res.url;
+          else if (tipoDocumento === 'dniReverso') this.nuevoComplejo.urlDniReverso = res.url;
+        },
+        error: (err) => {
+          this.cargandoDocumentoKyb = false;
+          console.error('Error al subir documento:', err);
+          this.mensaje = 'Error al subir el documento. Inténtelo de nuevo.';
+          this.tipoMensaje = 'error';
+        }
+      });
+    }
+  }
+
+  intentarCancelarComplejo(): void {
+    this.mostrarConfirmacionCancelarComplejo = true;
+  }
+
+  confirmarCancelarComplejo(): void {
+    this.mostrarConfirmacionCancelarComplejo = false;
+    this.mostrarFormComplejo = false;
+    this.mensaje = '';
+    
+    // Resetear formulario y limpiar campos
+    this.nuevoComplejo = {
+      nombre: '',
+      direccion: '',
+      ciudad: 'Trujillo',
+      telefonoContacto: '',
+      yapePlinInfo: '',
+      descripcion: '',
+      imagenPrincipal: '',
+      tipoCobro: 'billetera',
+      bancoInfo: '',
+      billeteraTipo: '1',
+      billeteraNumero: '',
+      ruc: '',
+      razonSocial: '',
+      urlLicencia: '',
+      urlFichaRuc: '',
+      urlDniRepresentante: '',
+      urlDniReverso: ''
+    };
+    this.comodidades.forEach(c => c.selected = false);
+  }
+
   registrarComplejo(): void {
+    if (this.nuevoComplejo.tipoCobro === 'banco') {
+      this.nuevoComplejo.yapePlinInfo = `Banco: ${this.nuevoComplejo.bancoInfo}`;
+    } else {
+      this.nuevoComplejo.yapePlinInfo = `${this.nuevoComplejo.billeteraTipo}: ${this.nuevoComplejo.billeteraNumero}`;
+    }
+
     if (!this.nuevoComplejo.nombre || !this.nuevoComplejo.direccion || !this.nuevoComplejo.telefonoContacto || !this.nuevoComplejo.yapePlinInfo) {
       this.mensaje = 'Por favor, rellene los campos obligatorios.';
       this.tipoMensaje = 'error';
@@ -131,7 +275,11 @@ export class MisComplejosComponent implements OnInit {
           telefonoContacto: '',
           yapePlinInfo: '',
           descripcion: '',
-          imagenPrincipal: ''
+          imagenPrincipal: '',
+          tipoCobro: 'billetera',
+          bancoInfo: '',
+          billeteraTipo: '1',
+          billeteraNumero: ''
         };
         this.comodidades.forEach(c => c.selected = false);
 
@@ -290,5 +438,84 @@ export class MisComplejosComponent implements OnInit {
       return 'http://localhost:8080' + imagen;
     }
     return imagen;
+  }
+
+  // =========================================================================
+  // MÉTODOS: CORRECCIÓN KYB
+  // =========================================================================
+
+  abrirModalCorrecionKyb(complejo: any) {
+    this.complejoCorrecionKyb = {
+      id: complejo.id,
+      ruc: complejo.ruc,
+      razonSocial: complejo.razonSocial,
+      urlLicencia: '',
+      urlFichaRuc: '',
+      urlDniRepresentante: '',
+      urlDniReverso: ''
+    };
+    this.mostrarModalCorrecionKyb = true;
+  }
+
+  cerrarModalCorrecionKyb() {
+    this.mostrarModalCorrecionKyb = false;
+    this.complejoCorrecionKyb = null;
+  }
+
+  subirDocumentoCorrecion(event: any, tipo: string) {
+    const file = event.target.files[0];
+    if (file) {
+      this.cargandoDocumentoKyb = true;
+      this.complejoService.subirDocumentoKyb(file).subscribe({
+        next: (res) => {
+          if (tipo === 'licencia') this.complejoCorrecionKyb.urlLicencia = res.url;
+          if (tipo === 'ruc') this.complejoCorrecionKyb.urlFichaRuc = res.url;
+          if (tipo === 'dniAnverso') this.complejoCorrecionKyb.urlDniRepresentante = res.url;
+          if (tipo === 'dniReverso') this.complejoCorrecionKyb.urlDniReverso = res.url;
+          this.cargandoDocumentoKyb = false;
+        },
+        error: (err) => {
+          console.error(err);
+          this.mensaje = 'Error al subir documento: ' + (err.error || err.message);
+          this.tipoMensaje = 'error';
+          this.cargandoDocumentoKyb = false;
+        }
+      });
+    }
+  }
+
+  guardarCorrecionKyb() {
+    if (!this.complejoCorrecionKyb.ruc || this.complejoCorrecionKyb.ruc.length !== 11) {
+      this.mensaje = 'El RUC debe tener exactamente 11 dígitos.';
+      this.tipoMensaje = 'error';
+      return;
+    }
+    if (!this.complejoCorrecionKyb.razonSocial) {
+      this.mensaje = 'La Razón Social es obligatoria.';
+      this.tipoMensaje = 'error';
+      return;
+    }
+    if (!this.complejoCorrecionKyb.urlLicencia || !this.complejoCorrecionKyb.urlFichaRuc || !this.complejoCorrecionKyb.urlDniRepresentante || !this.complejoCorrecionKyb.urlDniReverso) {
+      this.mensaje = 'Debes subir nuevamente los 4 documentos obligatorios.';
+      this.tipoMensaje = 'error';
+      return;
+    }
+
+    this.cargando = true;
+    this.complejoService.actualizarKybComplejo(this.complejoCorrecionKyb.id, this.complejoCorrecionKyb).subscribe({
+      next: () => {
+        this.mensaje = 'Documentos enviados correctamente. Tu complejo está nuevamente en revisión.';
+        this.tipoMensaje = 'exito';
+        this.cerrarModalCorrecionKyb();
+        this.cargarComplejos();
+        this.cargando = false;
+      },
+      error: (err) => {
+        console.error(err);
+        this.mensaje = 'Error al corregir documentos: ' + (err.error || err.message);
+        this.tipoMensaje = 'error';
+        this.cargando = false;
+      }
+    });
   }
 }

@@ -106,6 +106,23 @@ public class ReservaService {
     }
 
     @Transactional
+    public void cancelarReservaJugador(Long reservaId, Long clienteId) {
+        Reserva reserva = reservaRepository.findById(reservaId)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+
+        if (!reserva.getCliente().getId().equals(clienteId)) {
+            throw new RuntimeException("No tiene permisos para cancelar esta reserva.");
+        }
+
+        if (!reserva.getEstado().equals("PENDIENTE_ADELANTO")) {
+            throw new RuntimeException("Solo se pueden cancelar reservas que están pendientes de pago.");
+        }
+
+        pagoRepository.findByReservaId(reservaId).ifPresent(pagoRepository::delete);
+        reservaRepository.delete(reserva);
+    }
+
+    @Transactional
     public Reserva confirmarReserva(Long reservaId, Long propietarioId) {
         Reserva reserva = reservaRepository.findById(reservaId)
                 .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));

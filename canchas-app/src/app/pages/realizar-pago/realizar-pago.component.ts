@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 
 import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { ReservaService } from '../../services/reserva.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-realizar-pago',
@@ -32,10 +33,13 @@ export class RealizarPagoComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private reservaService: ReservaService,
-    private router: Router
+    private router: Router,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
+    // Restaurar el scroll al inicio de la página automáticamente
+    window.scrollTo(0, 0);
 
     const idReserva =
       Number(
@@ -103,10 +107,18 @@ export class RealizarPagoComponent implements OnInit, OnDestroy {
         this.tiempoExpirado = true;
         clearInterval(this.intervaloId);
         
-        // Redirigir porque se acabó el tiempo
-        if (this.reserva.estado === 'PENDIENTE_ADELANTO') {
-          alert('El tiempo para realizar el pago de esta reserva ha expirado.');
-          this.router.navigate(['/misreservas']);
+        // Ejecutar Rollback Automático porque se acabó el tiempo
+        if (this.reserva && this.reserva.estado === 'PENDIENTE_ADELANTO') {
+          this.reservaService.cancelarReserva(this.reserva.id, this.reserva.cliente.id).subscribe({
+            next: () => {
+              this.toastService.mostrar('El tiempo expiró. La reserva fue cancelada automáticamente.', 'error', 5000);
+              this.router.navigate(['/misreservas']);
+            },
+            error: () => {
+              this.toastService.mostrar('El tiempo expiró. Ocurrió un problema liberando la cancha.', 'error', 5000);
+              this.router.navigate(['/misreservas']);
+            }
+          });
         }
       }
     }, 1000);
@@ -128,6 +140,37 @@ export class RealizarPagoComponent implements OnInit, OnDestroy {
     
     const texto = `Hola, acabo de realizar la reserva de la cancha *${canchaNombre}* en el complejo *${complejoNombre}* para el día *${fecha}* en el horario *${hora}* a través de PlayField.\n\nAdjunto el comprobante del ${tipoPagoTexto} (S/ ${montoPago.toFixed(2)}). Mi nombre es *${clienteNombre}*. Quedo a la espera de su confirmación. ¡Muchas gracias!`;
     return `https://wa.me/51${telefono}?text=${encodeURIComponent(texto)}`;
+  }
+
+  mostrarConfirmacionCancelacion: boolean = false;
+
+  cancelando: boolean = false;
+
+  confirmarCancelacion(): void {
+    if (!this.reserva || !this.reserva.cliente) {
+      this.router.navigate(['/misreservas']);
+      return;
+    }
+
+    this.cancelando = true;
+    
+    // Detener el temporizador de inmediato
+    if (this.intervaloId) {
+      clearInterval(this.intervaloId);
+    }
+
+    this.reservaService.cancelarReserva(this.reserva.id, this.reserva.cliente.id).subscribe({
+      next: () => {
+        this.toastService.mostrar('Reserva cancelada (rollback exitoso).', 'success', 3000);
+        this.router.navigate(['/misreservas']);
+      },
+      error: () => {
+        this.toastService.mostrar('Hubo un error al cancelar la reserva.', 'error', 3000);
+        this.cancelando = false;
+        // Si hay error, reiniciamos el temporizador por seguridad
+        this.iniciarTemporizador();
+      }
+    });
   }
 
   obtenerImagenUrl(imagen: string): string {

@@ -6,6 +6,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { AuthService } from '../../services/auth.service';
 import { ReservaService, CanchaLocal, HorarioDTO } from '../../services/reserva.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-reservar',
@@ -56,7 +57,8 @@ export class ReservarComponent implements OnInit {
     private authService: AuthService,
     private reservaService: ReservaService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -361,11 +363,11 @@ export class ReservarComponent implements OnInit {
 
   enviarCalificacion() {
     if (this.calificacionData.puntuacion === 0) {
-      alert('Por favor selecciona una puntuación.');
+      this.toastService.mostrar('Por favor selecciona una puntuación.', 'error');
       return;
     }
     if (!this.calificacionData.comentario.trim()) {
-      alert('Por favor agrega un comentario.');
+      this.toastService.mostrar('Por favor agrega un comentario.', 'error');
       return;
     }
 
@@ -379,10 +381,10 @@ export class ReservarComponent implements OnInit {
     this.reservaService.guardarCalificacion(payload).subscribe({
       next: () => {
         this.mostrarCalificacionModal = false;
-        alert('¡Gracias por tu calificación!');
+        this.toastService.mostrar('¡Gracias por tu calificación!', 'success');
       },
       error: () => {
-        alert('Ocurrió un error al enviar la calificación.');
+        this.toastService.mostrar('Ocurrió un error al enviar la calificación.', 'error');
       }
     });
   }

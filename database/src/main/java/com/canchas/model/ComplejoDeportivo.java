@@ -39,6 +39,9 @@ public class ComplejoDeportivo {
 
     private Double rating;
 
+    @Column(nullable = false)
+    private Boolean activo;
+
     // =========================================================================
     // CAMPOS KYB (Know Your Business) - Verificación Legal del Complejo
     // =========================================================================
@@ -63,14 +66,19 @@ public class ComplejoDeportivo {
     @Column(name = "url_ficha_ruc")
     private String urlFichaRuc;
 
-    // URL de la foto/PDF del DNI o Carnet de Extranjería del Representante Legal
+    // URL de la foto/PDF del DNI o Carnet de Extranjería del Representante Legal (Anverso)
     @Column(name = "url_dni_representante")
     private String urlDniRepresentante;
+
+    // URL de la foto/PDF del DNI o Carnet de Extranjería del Representante Legal (Reverso)
+    @Column(name = "url_dni_reverso")
+    private String urlDniReverso;
 
     public ComplejoDeportivo() {
         this.rating = 5.0;
         this.ciudad = "Trujillo";
         this.estadoVerificacion = "PENDING_VERIFICATION"; // Estado inicial: pendiente de revisión
+        this.activo = true;
     }
 
     // GETTERS Y SETTERS
@@ -163,6 +171,14 @@ public class ComplejoDeportivo {
         this.rating = rating;
     }
 
+    public Boolean getActivo() {
+        return activo;
+    }
+
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
+    }
+
     // =========================================================================
     // GETTERS Y SETTERS KYB
     // =========================================================================
@@ -184,4 +200,7 @@ public class ComplejoDeportivo {
 
     public String getUrlDniRepresentante() { return urlDniRepresentante; }
     public void setUrlDniRepresentante(String urlDniRepresentante) { this.urlDniRepresentante = urlDniRepresentante; }
+
+    public String getUrlDniReverso() { return urlDniReverso; }
+    public void setUrlDniReverso(String urlDniReverso) { this.urlDniReverso = urlDniReverso; }
 }

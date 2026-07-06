@@ -1,3 +1,5 @@
+<app-navbar></app-navbar>
+
 <div class="container py-4">
 
   <!-- TÍTULO DEL PANEL -->
@@ -130,14 +132,17 @@
 
             <!-- Links a documentos legales -->
             <div class="mt-2 mb-3">
-              <a *ngIf="complejo.urlLicencia" [href]="complejo.urlLicencia" target="_blank" class="btn btn-sm btn-outline-secondary me-2">
+              <a *ngIf="complejo.urlLicencia" [href]="getFullUrl(complejo.urlLicencia)" target="_blank" class="btn btn-sm btn-outline-secondary me-2">
                 <i class="bi bi-file-earmark-pdf"></i> Licencia Municipal
               </a>
-              <a *ngIf="complejo.urlFichaRuc" [href]="complejo.urlFichaRuc" target="_blank" class="btn btn-sm btn-outline-secondary me-2">
+              <a *ngIf="complejo.urlFichaRuc" [href]="getFullUrl(complejo.urlFichaRuc)" target="_blank" class="btn btn-sm btn-outline-secondary me-2">
                 <i class="bi bi-file-earmark-pdf"></i> Ficha RUC
               </a>
-              <a *ngIf="complejo.urlDniRepresentante" [href]="complejo.urlDniRepresentante" target="_blank" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-person-badge"></i> DNI Representante
+              <a *ngIf="complejo.urlDniRepresentante" [href]="getFullUrl(complejo.urlDniRepresentante)" target="_blank" class="btn btn-sm btn-outline-secondary me-2">
+                <i class="bi bi-person-badge"></i> DNI (Anverso)
+              </a>
+              <a *ngIf="complejo.urlDniReverso" [href]="getFullUrl(complejo.urlDniReverso)" target="_blank" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-person-badge"></i> DNI (Reverso)
               </a>
             </div>
 
@@ -172,7 +177,8 @@
               <div>
                 <h5 class="fw-bold text-danger"><i class="bi bi-exclamation-triangle"></i> Reporte #{{ reporte.id }}</h5>
                 <p class="mb-1"><strong>Jugador:</strong> {{ reporte.jugador?.nombre }} ({{ reporte.jugador?.correo }})</p>
-                <p class="mb-1"><strong>Reserva ID:</strong> {{ reporte.reserva?.id }}</p>
+                <p class="mb-1"><strong>Reserva:</strong> #{{ reporte.reserva?.id }} - {{ reporte.reserva?.cancha?.nombre }} ({{ reporte.reserva?.cancha?.complejo?.nombre }})</p>
+                <p class="mb-1"><strong>Horario:</strong> {{ reporte.reserva?.fecha | date:'dd/MM/yyyy' }} de {{ reporte.reserva?.horaInicio?.substring(0, 5) }} a {{ reporte.reserva?.horaFin?.substring(0, 5) }}</p>
                 <p class="mb-1"><strong>Motivo:</strong> {{ reporte.motivo }}</p>
                 <p class="mb-1 text-muted"><strong>Fecha:</strong> {{ reporte.fechaReporte }}</p>
               </div>
@@ -183,13 +189,13 @@
             <div class="mt-3 mb-3">
               <strong>Evidencias del jugador:</strong>
               <div class="d-flex gap-2 mt-2 flex-wrap">
-                <a *ngIf="reporte.urlEvidencia1" [href]="reporte.urlEvidencia1" target="_blank" class="btn btn-sm btn-outline-info">
+                <a *ngIf="reporte.urlEvidencia1" [href]="getFullUrl(reporte.urlEvidencia1)" target="_blank" class="btn btn-sm btn-outline-info">
                   <i class="bi bi-image"></i> Evidencia 1
                 </a>
-                <a *ngIf="reporte.urlEvidencia2" [href]="reporte.urlEvidencia2" target="_blank" class="btn btn-sm btn-outline-info">
+                <a *ngIf="reporte.urlEvidencia2" [href]="getFullUrl(reporte.urlEvidencia2)" target="_blank" class="btn btn-sm btn-outline-info">
                   <i class="bi bi-image"></i> Evidencia 2
                 </a>
-                <a *ngIf="reporte.urlEvidencia3" [href]="reporte.urlEvidencia3" target="_blank" class="btn btn-sm btn-outline-info">
+                <a *ngIf="reporte.urlEvidencia3" [href]="getFullUrl(reporte.urlEvidencia3)" target="_blank" class="btn btn-sm btn-outline-info">
                   <i class="bi bi-image"></i> Evidencia 3
                 </a>
               </div>
@@ -201,12 +207,12 @@
               <textarea class="form-control" rows="2" [(ngModel)]="resolucionTexto" placeholder="Escribe tu resolución aquí..."></textarea>
             </div>
 
-            <div class="d-flex gap-2">
-              <button class="btn btn-success" (click)="resolverAFavor(reporte.id)">
-                <i class="bi bi-check-circle me-1"></i> A favor del Jugador (Penalizar Dueño)
+            <div class="d-flex gap-2 mt-2">
+              <button class="btn btn-danger text-white fw-bold" style="background-color: #ff4d4d; border:none;" (click)="abrirModalStrike(reporte)">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> A favor del Jugador (Emitir Strike)
               </button>
-              <button class="btn btn-secondary" (click)="resolverRechazado(reporte.id)">
-                <i class="bi bi-x-circle me-1"></i> Rechazar Reporte
+              <button class="btn btn-secondary" (click)="rechazarReporte(reporte.id)">
+                <i class="bi bi-x-circle me-1"></i> Rechazar Reporte (Sin Penalización)
               </button>
             </div>
           </div>
@@ -218,6 +224,84 @@
         <p class="mt-2">No hay controversias pendientes.</p>
       </div>
     </div>
+
+    <!-- SECCIÓN DE APELACIONES DE STRIKES (Dentro de reportes) -->
+    <div class="mt-5">
+      <h4 class="fw-bold mb-3 border-bottom pb-2">Apelaciones de Strikes</h4>
+      
+      <div class="row">
+        <div class="col-12" *ngFor="let apelacion of apelacionesPendientes">
+          <div class="card mb-3 shadow-sm border-warning">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h5 class="fw-bold text-warning"><i class="bi bi-shield-exclamation"></i> Strike Apelado #{{ apelacion.id }}</h5>
+                  <p class="mb-1"><strong>Complejo:</strong> {{ apelacion.complejo?.nombre }}</p>
+                  <p class="mb-1"><strong>Motivo Admin (Strike):</strong> {{ apelacion.motivoAdmin }}</p>
+                  <p class="mb-1"><strong>Motivo Apelación (Dueño):</strong> {{ apelacion.motivoApelacion }}</p>
+                  <p class="mb-1 text-muted"><strong>Fecha Emisión:</strong> {{ apelacion.fechaEmision }}</p>
+                </div>
+                <span class="badge bg-warning text-dark fs-6 p-2">APELADO</span>
+              </div>
+
+              <div class="mt-3 mb-3 d-flex gap-2">
+                <a *ngIf="apelacion.urlEvidenciaAdmin" [href]="getFullUrl(apelacion.urlEvidenciaAdmin)" target="_blank" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-image"></i> Evidencia Admin
+                </a>
+                <a *ngIf="apelacion.urlEvidenciaApelacion" [href]="getFullUrl(apelacion.urlEvidenciaApelacion)" target="_blank" class="btn btn-sm btn-outline-warning">
+                  <i class="bi bi-image"></i> Evidencia Dueño
+                </a>
+              </div>
+
+              <div class="d-flex gap-2 mt-2">
+                <button class="btn btn-success fw-bold" (click)="resolverApelacion(apelacion.id, 'REVOCADO')">
+                  <i class="bi bi-check-circle me-1"></i> Revocar Strike (Aceptar Apelación)
+                </button>
+                <button class="btn btn-danger fw-bold" (click)="resolverApelacion(apelacion.id, 'MANTENIDO')">
+                  <i class="bi bi-x-circle me-1"></i> Mantener Strike (Rechazar Apelación)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="apelacionesPendientes.length === 0" class="text-center text-muted py-3">
+          <p>No hay apelaciones pendientes de revisión.</p>
+        </div>
+      </div>
+    </div>
   </div>
 
+</div>
+
+<!-- MODAL EMITIR STRIKE -->
+<div class="modal fade show" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);" *ngIf="mostrarModalStrike">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Emitir Strike al Complejo</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="cerrarModalStrike()"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3">
+          Estás a punto de penalizar al complejo deportivo. A los 3 strikes, el complejo quedará inhabilitado.
+        </p>
+        <div class="mb-3">
+          <label class="form-label fw-bold">Motivo del Strike</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="motivoStrike" placeholder="Explica detalladamente por qué se emite este strike..."></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold">Evidencia Adicional (Opcional)</label>
+          <input type="file" class="form-control" (change)="onStrikeFileSelected($event)" accept="image/*,.pdf">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalStrike()">Cancelar</button>
+        <button type="button" class="btn btn-danger fw-bold" (click)="emitirStrike()" [disabled]="enviandoStrike">
+          <span *ngIf="!enviandoStrike">Emitir Strike</span>
+          <span *ngIf="enviandoStrike">Subiendo... <i class="spinner-border spinner-border-sm"></i></span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

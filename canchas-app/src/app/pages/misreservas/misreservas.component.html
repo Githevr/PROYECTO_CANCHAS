@@ -101,9 +101,14 @@
             S/{{ reserva.precioTotal }}
           </div>
 
-          <button class="btn-detalles" style="margin-top: 15px; width: 100%; padding: 10px; background: transparent; border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 12px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.borderColor='#39d353'; this.style.color='#39d353';" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.color='white';" (click)="abrirDetalles(reserva, $event)">
-            Ver detalles de cancha
-          </button>
+          <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="btn-detalles" style="flex: 1; padding: 10px; background: transparent; border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 12px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.borderColor='#39d353'; this.style.color='#39d353';" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.color='white';" (click)="abrirDetalles(reserva, $event)">
+              Ver detalles
+            </button>
+            <button class="btn-detalles" style="flex: 1; padding: 10px; background: transparent; border: 1px solid rgba(255,255,255,0.12); color: #ff4d4d; border-radius: 12px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.borderColor='#ff4d4d'; this.style.background='rgba(255,77,77,0.1)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.background='transparent';" (click)="abrirModalReporte(reserva, $event)">
+              🚨 Reportar
+            </button>
+          </div>
 
         </div>
 
@@ -235,3 +240,35 @@
   </div>
 
 </div>
+
+  <!-- MODAL DE REPORTE CON ARCHIVOS -->
+  <div class="modal-overlay" *ngIf="mostrarReporteModal" (click)="cerrarReporte()">
+    <div class="modal-container bg-dark text-white p-4 rounded-4" style="max-width: 500px; width: 90%; border: 1px solid rgba(255,255,255,0.1);" (click)="$event.stopPropagation()">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold m-0 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Reportar Cancha</h3>
+        <button class="btn text-white fs-4 p-0" style="background:none; border:none;" (click)="cerrarReporte()">✕</button>
+      </div>
+
+      <p class="text-muted small mb-4">
+        Si tuviste un problema grave con esta reserva (ej: pagaste y no te dejaron jugar, condiciones pésimas), puedes reportar el complejo. Al acumular reportes, el complejo será penalizado.
+      </p>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Motivo del reporte</label>
+        <textarea class="form-control bg-dark text-white border-secondary" rows="4" placeholder="Describe detalladamente qué sucedió..." [(ngModel)]="reporteMotivo"></textarea>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Evidencias (Fotos o PDF)</label>
+        <input type="file" class="form-control bg-dark text-white border-secondary mb-2" (change)="onFileSelected($event, 1)" accept="image/*,.pdf">
+        <input type="file" class="form-control bg-dark text-white border-secondary mb-2" (change)="onFileSelected($event, 2)" accept="image/*,.pdf">
+        <input type="file" class="form-control bg-dark text-white border-secondary" (change)="onFileSelected($event, 3)" accept="image/*,.pdf">
+        <small class="text-muted mt-1 d-block">Debes adjuntar al menos 1 evidencia.</small>
+      </div>
+
+      <button class="btn btn-danger w-100 fw-bold py-2 rounded-3 shadow-sm" (click)="enviarReporte()" [disabled]="enviandoReporte">
+        <span *ngIf="!enviandoReporte">Enviar Reporte</span>
+        <span *ngIf="enviandoReporte">Subiendo evidencias... <i class="spinner-border spinner-border-sm"></i></span>
+      </button>
+    </div>
+  </div>
