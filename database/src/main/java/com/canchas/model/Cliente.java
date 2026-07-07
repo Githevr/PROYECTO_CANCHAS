@@ -36,6 +36,9 @@ public class Cliente {
     @Column(name = "fecha_generacion_codigo")
     private java.time.LocalDateTime fechaGeneracionCodigo;
 
+    @Column(name = "reservas_perdidas")
+    private Integer reservasPerdidas;
+
     // Constructor por defecto
     public Cliente() {
         this.rol = "JUGADOR"; // Rol por defecto
@@ -122,6 +125,14 @@ public class Cliente {
 
     public void setCreditos(BigDecimal creditos) {
         this.creditos = creditos;
+    }
+
+    public Integer getReservasPerdidas() {
+        return reservasPerdidas;
+    }
+
+    public void setReservasPerdidas(Integer reservasPerdidas) {
+        this.reservasPerdidas = reservasPerdidas;
     }
 
     public java.time.LocalDateTime getFechaGeneracionCodigo() {

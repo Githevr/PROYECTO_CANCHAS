@@ -26,8 +26,13 @@ public class ReservaController {
     }
 
     @PostMapping
-    public Reserva reservar(@RequestBody ReservaRequest request) {
-        return reservaService.crearReserva(request);
+    public ResponseEntity<?> reservar(@RequestBody ReservaRequest request) {
+        try {
+            Reserva reserva = reservaService.crearReserva(request);
+            return ResponseEntity.ok(reserva);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
+        }
     }
 
     @GetMapping("/disponibilidad/{canchaId}")
@@ -139,5 +144,20 @@ public class ReservaController {
     @GetMapping("/reportes/{jugadorId}")
     public List<ReporteReserva> obtenerReportesJugador(@PathVariable Long jugadorId) {
         return reporteService.obtenerReportesJugador(jugadorId);
+    }
+
+    // Endpoint para que el jugador suba su comprobante de pago directo al dueño
+    @PostMapping("/{id}/subir-comprobante")
+    public ResponseEntity<?> subirComprobante(
+            @PathVariable Long id,
+            @RequestParam String numeroOperacion,
+            @RequestParam String urlComprobante
+    ) {
+        try {
+            Reserva reserva = reservaService.vincularComprobantePago(id, numeroOperacion, urlComprobante);
+            return ResponseEntity.ok(reserva);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

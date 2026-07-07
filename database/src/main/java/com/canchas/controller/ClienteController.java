@@ -99,4 +99,26 @@ public class ClienteController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
+
+    @GetMapping("/{id}/reservas-perdidas")
+    public ResponseEntity<?> obtenerReservasPerdidas(@PathVariable Long id) {
+        Cliente cliente = clienteRepository.findById(id).orElse(null);
+        if (cliente == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cliente no encontrado");
+        }
+        Map<String, Integer> response = new HashMap<>();
+        response.put("reservasPerdidas", cliente.getReservasPerdidas() != null ? cliente.getReservasPerdidas() : 0);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/reset-reservas-perdidas")
+    public ResponseEntity<?> resetReservasPerdidas(@PathVariable Long id) {
+        Cliente cliente = clienteRepository.findById(id).orElse(null);
+        if (cliente == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cliente no encontrado");
+        }
+        cliente.setReservasPerdidas(0);
+        clienteRepository.save(cliente);
+        return ResponseEntity.ok("Contador reiniciado");
+    }
 }

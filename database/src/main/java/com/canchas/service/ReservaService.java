@@ -5,7 +5,7 @@ import com.canchas.dto.ReservaRequest;
 import com.canchas.dto.HorarioDTO;
 import com.canchas.model.*;
 import com.canchas.repository.*;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -38,7 +38,7 @@ public class ReservaService {
         this.historialCreditoRepository = historialCreditoRepository;
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = IllegalStateException.class)
     public Reserva crearReserva(ReservaRequest request) {
         Canchas cancha = canchaRepository.findById(request.getCanchaId())
                 .orElseThrow(() -> new RuntimeException("Cancha no encontrada"));
@@ -50,6 +50,7 @@ public class ReservaService {
         boolean ocupada = reservasExistentes.stream()
                 .anyMatch(r -> r.getHoraInicio().equals(request.getHoraInicio()) && 
                                (r.getEstado().equals("CONFIRMADA") || r.getEstado().equals("PAGADO") ||
+                               r.getEstado().equals("ESPERANDO_CONFIRMACION") ||
                                (r.getEstado().equals("PENDIENTE_ADELANTO") && r.getFechaExpiracionBloqueo() != null && ahora.isBefore(r.getFechaExpiracionBloqueo()))));
 
         if (ocupada) {
@@ -75,7 +76,10 @@ public class ReservaService {
 
         // Validar que el dueño tenga saldo de créditos suficiente en la plataforma
         if (propietario.getCreditos().compareTo(comisionAplicada) < 0) {
-            throw new RuntimeException("El complejo deportivo no puede recibir reservas temporalmente por saldo de créditos insuficiente.");
+            int perdidasActuales = propietario.getReservasPerdidas() != null ? propietario.getReservasPerdidas() : 0;
+            propietario.setReservasPerdidas(perdidasActuales + 1);
+            clienteRepository.save(propietario);
+            throw new IllegalStateException("El complejo deportivo no puede recibir reservas temporalmente por saldo de créditos insuficiente.");
         }
 
         // 2. Crear la reserva en estado PENDIENTE_ADELANTO (Aún no bloquea el horario oficialmente hasta que yapee)
@@ -106,6 +110,30 @@ public class ReservaService {
     }
 
     @Transactional
+    public Reserva vincularComprobantePago(Long reservaId, String numeroOperacion, String urlComprobante) {
+        Reserva reserva = reservaRepository.findById(reservaId)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+
+        if (!"PENDIENTE_ADELANTO".equals(reserva.getEstado())) {
+            throw new RuntimeException("Solo se pueden subir comprobantes en reservas PENDIENTES.");
+        }
+
+        // Cambiar estado y quitar expiración, ya que subió su comprobante, la cancha queda bloqueada a la espera del dueño
+        reserva.setEstado("ESPERANDO_CONFIRMACION");
+        reserva.setFechaExpiracionBloqueo(null);
+
+        Pago pago = pagoRepository.findByReservaId(reservaId)
+                .orElseThrow(() -> new RuntimeException("Registro de pago no encontrado"));
+        
+        pago.setNumeroOperacion(numeroOperacion);
+        pago.setUrlComprobante(urlComprobante);
+        pago.setFechaPago(LocalDateTime.now());
+        pagoRepository.save(pago);
+
+        return reservaRepository.save(reserva);
+    }
+
+    @Transactional
     public void cancelarReservaJugador(Long reservaId, Long clienteId) {
         Reserva reserva = reservaRepository.findById(reservaId)
                 .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
@@ -132,8 +160,8 @@ public class ReservaService {
             throw new RuntimeException("No tiene permisos para confirmar esta reserva.");
         }
 
-        if (!reserva.getEstado().equals("PENDIENTE_ADELANTO")) {
-            throw new RuntimeException("La reserva no está pendiente de adelanto. Estado actual: " + reserva.getEstado());
+        if (!reserva.getEstado().equals("PENDIENTE_ADELANTO") && !reserva.getEstado().equals("ESPERANDO_CONFIRMACION")) {
+            throw new RuntimeException("La reserva no está en un estado válido para confirmar. Estado actual: " + reserva.getEstado());
         }
 
         // 1. REGLA DE NEGOCIO CLAVE: Verificar en tiempo real que otra persona no haya confirmado este mismo horario antes.
@@ -270,7 +298,7 @@ public class ReservaService {
                     .findFirst().orElse(null);
 
             if (reservaOcupante != null) {
-                if (reservaOcupante.getEstado().equals("CONFIRMADA") || reservaOcupante.getEstado().equals("PAGADO")) {
+                if (reservaOcupante.getEstado().equals("CONFIRMADA") || reservaOcupante.getEstado().equals("PAGADO") || reservaOcupante.getEstado().equals("ESPERANDO_CONFIRMACION")) {
                     return new HorarioDTO(hora, "OCUPADO", 0L);
                 } else if (reservaOcupante.getEstado().equals("PENDIENTE_ADELANTO") && reservaOcupante.getFechaExpiracionBloqueo() != null) {
                     if (ahora.isBefore(reservaOcupante.getFechaExpiracionBloqueo())) {

@@ -49,6 +49,14 @@ export class AdminDashboardComponent implements OnInit {
   evidenciaStrikeFile: File | null = null;
   enviandoStrike: boolean = false;
 
+  // =========================================================================
+  // SECCIÓN: Recargas de Créditos (Dueño -> Admin)
+  // =========================================================================
+  recargasPendientes: any[] = [];
+  mostrarModalConfirmacionRecarga: boolean = false;
+  accionConfirmacionRecarga: 'aprobar' | 'rechazar' | null = null;
+  recargaIdSeleccionada: number | null = null;
+
   private apiUrl = 'http://localhost:8080';
 
   constructor(private http: HttpClient, private toastService: ToastService) {}
@@ -58,6 +66,7 @@ export class AdminDashboardComponent implements OnInit {
     this.cargarComplejosPendientes();
     this.cargarReportesPendientes();
     this.cargarApelaciones();
+    this.cargarRecargasPendientes();
   }
 
   getFullUrl(path: string): string {
@@ -291,6 +300,51 @@ export class AdminDashboardComponent implements OnInit {
         this.apelacionesPendientes = this.apelacionesPendientes.filter(s => s.id !== strikeId);
       },
       error: (err) => this.toastService.mostrar('Error al resolver apelación: ' + err.error, 'error')
+    });
+  }
+
+  // =========================================================================
+  // MÉTODOS: Recargas de Créditos (Dueño -> Admin)
+  // =========================================================================
+  cargarRecargasPendientes() {
+    this.http.get<any[]>(`${this.apiUrl}/creditos/admin/pendientes`).subscribe({
+      next: (res) => this.recargasPendientes = res,
+      error: (err) => console.error('Error al cargar recargas:', err)
+    });
+  }
+
+  abrirModalConfirmacionRecarga(id: number, accion: 'aprobar' | 'rechazar') {
+    this.recargaIdSeleccionada = id;
+    this.accionConfirmacionRecarga = accion;
+    this.mostrarModalConfirmacionRecarga = true;
+  }
+
+  cerrarModalConfirmacionRecarga() {
+    this.mostrarModalConfirmacionRecarga = false;
+    this.recargaIdSeleccionada = null;
+    this.accionConfirmacionRecarga = null;
+  }
+
+  ejecutarAccionRecarga() {
+    if (!this.recargaIdSeleccionada || !this.accionConfirmacionRecarga) return;
+
+    const id = this.recargaIdSeleccionada;
+    const accion = this.accionConfirmacionRecarga;
+    
+    this.http.post(`${this.apiUrl}/creditos/admin/${accion}/${id}`, {}).subscribe({
+      next: () => {
+        const msj = accion === 'aprobar' ? 'Recarga aprobada exitosamente' : 'Recarga rechazada';
+        this.toastService.mostrar(msj, 'success');
+        this.cargarRecargasPendientes();
+        if (accion === 'aprobar') {
+          this.cargarDuenos();
+        }
+        this.cerrarModalConfirmacionRecarga();
+      },
+      error: (err) => {
+        this.toastService.mostrar(err.error || `Error al ${accion}`, 'error');
+        this.cerrarModalConfirmacionRecarga();
+      }
     });
   }
 }

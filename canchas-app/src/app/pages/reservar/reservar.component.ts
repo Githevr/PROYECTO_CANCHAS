@@ -47,6 +47,9 @@ export class ReservarComponent implements OnInit {
   mostrarDetallesModal: boolean = false;
   canchaParaDetalles: CanchaLocal | null = null;
   imagenActivaIndex: number = 0;
+  
+  // PROPIETARIOS SIN SALDO
+  complejosDeshabilitados: number[] = [];
 
   // MODAL DE CALIFICACIONES
   mostrarCalificacionModal: boolean = false;
@@ -241,38 +244,30 @@ export class ReservarComponent implements OnInit {
     this.authService.obtenerUsuarioActual();
 
   if (!usuario) {
-
-    this.mensaje =
-      'Debes iniciar sesión para reservar.';
-
+    this.mensaje = 'Debes iniciar sesión para reservar.';
     this.tipoMensaje = 'error';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
 
   if (!this.canchaSeleccionada) {
-
-    this.mensaje =
-      'Selecciona una cancha.';
-
+    this.mensaje = 'Selecciona una cancha.';
     this.tipoMensaje = 'error';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
 
   if (!this.fechaSeleccionada) {
-
-    this.mensaje =
-      'Selecciona una fecha.';
-
+    this.mensaje = 'Selecciona una fecha.';
     this.tipoMensaje = 'error';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
 
   if (!this.horaSeleccionada) {
-
-    this.mensaje =
-      'Selecciona un horario disponible.';
-
+    this.mensaje = 'Selecciona un horario disponible.';
     this.tipoMensaje = 'error';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
 
@@ -330,14 +325,24 @@ export class ReservarComponent implements OnInit {
       },
 
       error: (error) => {
-
-        this.mensaje =
-          error.error?.message ||
-          'Horario ocupado o error al reservar.';
-
-        this.tipoMensaje =
-          'error';
-
+        const errorMsg = error.error?.message || '';
+        
+        if (errorMsg.includes('saldo de créditos insuficiente')) {
+          this.mensaje = 'Lo sentimos, este complejo deportivo no puede recibir reservas en este momento por problemas administrativos. Sus canchas han sido deshabilitadas temporalmente.';
+          
+          if (this.canchaSeleccionada?.complejo?.id) {
+            this.complejosDeshabilitados.push(this.canchaSeleccionada.complejo.id);
+          }
+          
+          this.canchaSeleccionada = null;
+          this.horaSeleccionada = '';
+          this.horariosDisponibles = [];
+        } else {
+          this.mensaje = errorMsg || 'Horario ocupado o error al reservar.';
+        }
+        
+        this.tipoMensaje = 'error';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
     });

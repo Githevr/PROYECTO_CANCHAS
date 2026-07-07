@@ -1,5 +1,6 @@
 package com.canchas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -13,6 +14,7 @@ public class Pago {
 
     @OneToOne
     @JoinColumn(name = "reserva_id")
+    @JsonIgnore
     private Reserva reserva;
 
     private Double monto;
@@ -22,6 +24,12 @@ public class Pago {
     private LocalDateTime fechaPago;
 
     private String estado;
+
+    @Column(name = "numero_operacion")
+    private String numeroOperacion;
+
+    @Column(name = "url_comprobante")
+    private String urlComprobante;
 
     public Long getId() {
         return id;
@@ -69,5 +77,21 @@ public class Pago {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public String getNumeroOperacion() {
+        return numeroOperacion;
+    }
+
+    public void setNumeroOperacion(String numeroOperacion) {
+        this.numeroOperacion = numeroOperacion;
+    }
+
+    public String getUrlComprobante() {
+        return urlComprobante;
+    }
+
+    public void setUrlComprobante(String urlComprobante) {
+        this.urlComprobante = urlComprobante;
     }
 }

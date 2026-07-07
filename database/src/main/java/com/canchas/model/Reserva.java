@@ -45,6 +45,9 @@ public class Reserva {
     @Column(name = "fecha_expiracion_bloqueo")
     private LocalDateTime fechaExpiracionBloqueo;
 
+    @OneToOne(mappedBy = "reserva", cascade = CascadeType.ALL)
+    private Pago pago;
+
     public Reserva() {
         this.estado = "PENDIENTE_ADELANTO";
         this.comisionAplicada = BigDecimal.ZERO;
@@ -131,5 +134,13 @@ public class Reserva {
 
     public void setFechaExpiracionBloqueo(LocalDateTime fechaExpiracionBloqueo) {
         this.fechaExpiracionBloqueo = fechaExpiracionBloqueo;
+    }
+
+    public Pago getPago() {
+        return pago;
+    }
+
+    public void setPago(Pago pago) {
+        this.pago = pago;
     }
 }

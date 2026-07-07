@@ -1,6 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 
 import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { ReservaService } from '../../services/reserva.service';
@@ -12,7 +14,8 @@ import { ToastService } from '../../services/toast.service';
   imports: [
     CommonModule,
     NavbarComponent,
-    RouterLink
+    RouterLink,
+    FormsModule
   ],
   templateUrl: './realizar-pago.component.html',
   styleUrls: ['./realizar-pago.component.css']
@@ -34,7 +37,8 @@ export class RealizarPagoComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private reservaService: ReservaService,
     private router: Router,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -124,22 +128,66 @@ export class RealizarPagoComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
-  // Genera un enlace de WhatsApp directo al dueño con los datos de la reserva y el tipo de pago (50% o 100%)
-  obtenerEnlaceWhatsApp(): string {
-    if (!this.reserva) return '';
-    const complejo = this.reserva.cancha.complejo;
-    const telefono = complejo ? complejo.telefonoContacto : '987654321';
-    const canchaNombre = this.reserva.cancha.nombre;
-    const complejoNombre = complejo ? complejo.nombre : 'Complejo';
-    const fecha = this.reserva.fecha;
-    const hora = `${this.reserva.horaInicio.substring(0, 5)} - ${this.reserva.horaFin.substring(0, 5)}`;
-    const total = this.reserva.precioTotal || this.reserva.cancha.precio;
-    const montoPago = this.tipoPago === '50' ? (total / 2) : total;
-    const tipoPagoTexto = this.tipoPago === '50' ? 'adelanto del 50% de garantía' : 'pago completo del 100%';
-    const clienteNombre = this.reserva.cliente ? this.reserva.cliente.nombre : 'Cliente';
-    
-    const texto = `Hola, acabo de realizar la reserva de la cancha *${canchaNombre}* en el complejo *${complejoNombre}* para el día *${fecha}* en el horario *${hora}* a través de PlayField.\n\nAdjunto el comprobante del ${tipoPagoTexto} (S/ ${montoPago.toFixed(2)}). Mi nombre es *${clienteNombre}*. Quedo a la espera de su confirmación. ¡Muchas gracias!`;
-    return `https://wa.me/51${telefono}?text=${encodeURIComponent(texto)}`;
+  // Variables para la subida de comprobante
+  numeroOperacion: string = '';
+  comprobanteFile: File | null = null;
+  enviandoComprobante: boolean = false;
+
+  onComprobanteSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.comprobanteFile = file;
+    }
+  }
+
+  enviarComprobante(): void {
+    if (!this.reserva) return;
+    if (!this.numeroOperacion.trim()) {
+      this.toastService.mostrar('Por favor, ingresa el número de operación.', 'error');
+      return;
+    }
+    if (!this.comprobanteFile) {
+      this.toastService.mostrar('Por favor, selecciona la imagen del comprobante.', 'error');
+      return;
+    }
+
+    this.enviandoComprobante = true;
+    const formData = new FormData();
+    formData.append('file', this.comprobanteFile);
+
+    // 1. Subir imagen
+    this.http.post<any>('http://localhost:8080/api/reportes/upload', formData).subscribe({
+      next: (uploadRes) => {
+        const urlComprobante = uploadRes.url;
+        
+        // 2. Vincular comprobante a la reserva
+        this.http.post(`http://localhost:8080/reservas/${this.reserva.id}/subir-comprobante`, null, {
+          params: {
+            numeroOperacion: this.numeroOperacion,
+            urlComprobante: urlComprobante
+          }
+        }).subscribe({
+          next: () => {
+            this.enviandoComprobante = false;
+            // Detener el temporizador de bloqueo ya que se envió el pago
+            if (this.intervaloId) {
+              clearInterval(this.intervaloId);
+            }
+            this.reserva.estado = 'ESPERANDO_CONFIRMACION';
+            this.toastService.mostrar('Comprobante enviado exitosamente al propietario.', 'success', 5000);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          },
+          error: (err) => {
+            this.enviandoComprobante = false;
+            this.toastService.mostrar(err.error || 'Error al vincular el comprobante.', 'error');
+          }
+        });
+      },
+      error: () => {
+        this.enviandoComprobante = false;
+        this.toastService.mostrar('Ocurrió un error al subir el archivo.', 'error');
+      }
+    });
   }
 
   mostrarConfirmacionCancelacion: boolean = false;

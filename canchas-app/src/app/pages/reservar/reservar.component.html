@@ -113,6 +113,8 @@
         class="cancha-card"
         *ngFor="let cancha of canchasFiltradas"
         [class.cancha-activa]="canchaSeleccionada?.id === cancha.id"
+        [class.opacity-50]="cancha.complejo?.id && complejosDeshabilitados.includes(cancha.complejo.id)"
+        [style.pointer-events]="cancha.complejo?.id && complejosDeshabilitados.includes(cancha.complejo.id) ? 'none' : 'auto'"
         (click)="seleccionarCancha(cancha)">
 
         <div class="card-imagen">

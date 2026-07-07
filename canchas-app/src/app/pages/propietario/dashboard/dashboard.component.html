@@ -50,6 +50,30 @@
     </div>
   </div>
 
+  <!-- MODAL DE RESERVAS PERDIDAS POR FALTA DE CRÉDITOS (PANTALLA COMPLETA) -->
+  <div *ngIf="reservasPerdidas > 0" class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.85); z-index: 2000; backdrop-filter: blur(5px);">
+    <div class="card border-0 shadow-lg" style="max-width: 650px; width: 90%; border-radius: 20px; overflow: hidden;">
+      <div class="bg-danger text-white p-4 text-center">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size: 4rem;"></i>
+        <h2 class="fw-bold mt-3 mb-0">¡ALERTA CRÍTICA!</h2>
+        <h4 class="mb-0 opacity-75">Has perdido {{ reservasPerdidas }} reserva(s)</h4>
+      </div>
+      <div class="card-body p-5 text-center bg-white">
+        <h5 class="fw-bold text-dark mb-3">Tus canchas están siendo bloqueadas</h5>
+        <p class="text-muted fs-5 mb-4">
+          El sistema está rechazando automáticamente a los jugadores porque <strong>no tienes saldo de créditos suficiente</strong> para cubrir la comisión de reserva. Los horarios se han quedado libres y estás perdiendo ingresos reales.
+        </p>
+        <div class="d-flex flex-column gap-3 mt-4">
+          <button class="btn btn-danger btn-lg fw-bold py-3 shadow" (click)="irARecargar()">
+            <i class="bi bi-wallet2 me-2"></i>RECARGAR CRÉDITOS AHORA
+          </button>
+          <button class="btn btn-light border text-muted py-2" (click)="resetReservasPerdidas()">
+            Ya entendí (Ocultar aviso y continuar)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
   <!-- TARJETAS DE ANALÍTICAS / METRICAS RÁPIDAS -->
   <div class="row g-4 mb-5">
     <!-- RESERVAS TOTALES -->
@@ -144,8 +168,11 @@
                     <h6 class="fw-bold text-dark fs-5 mb-0">{{ res.cancha.nombre }}</h6>
                     <span class="text-muted small">{{ res.cancha.complejo.nombre }}</span>
                   </div>
-                  <span class="badge bg-warning-subtle text-warning fw-bold border border-warning rounded-pill px-3 py-1.5">
+                  <span class="badge bg-warning-subtle text-warning fw-bold border border-warning rounded-pill px-3 py-1.5" *ngIf="res.estado === 'PENDIENTE_ADELANTO'">
                     Espera de Adelanto
+                  </span>
+                  <span class="badge bg-info-subtle text-info fw-bold border border-info rounded-pill px-3 py-1.5" *ngIf="res.estado === 'ESPERANDO_CONFIRMACION'">
+                    Comprobante Subido
                   </span>
                 </div>
 
@@ -166,7 +193,8 @@
                   <div class="small">
                     <span class="text-muted d-block" style="font-size: 0.75rem;">Jugador:</span>
                     <strong class="text-dark">{{ res.cliente.nombre }} {{ res.cliente.apellido }}</strong>
-                    <a [href]="'https://wa.me/51' + res.cliente.telefono + '?text=Hola ' + res.cliente.nombre + ', soy el dueño del complejo ' + res.cancha.complejo.nombre + '. Estoy revisando tu solicitud de reserva para la cancha ' + res.cancha.nombre + '...'" 
+                    <span class="text-muted small d-block mb-1">{{ res.cliente.correo }}</span>
+                    <a *ngIf="res.estado === 'PENDIENTE_ADELANTO'" [href]="'https://wa.me/51' + res.cliente.telefono + '?text=Hola ' + res.cliente.nombre + ', soy el dueño del complejo ' + res.cancha.complejo.nombre + '. Estoy revisando tu solicitud de reserva para la cancha ' + res.cancha.nombre + '...'" 
                        target="_blank" 
                        class="text-success d-block text-decoration-none fw-bold mt-0.5"
                        style="font-size: 0.82rem;">
@@ -337,13 +365,25 @@
           <h5 class="text-white small fw-bold text-uppercase letter-spacing-1 mb-2.5" style="font-size: 0.8rem; letter-spacing: 0.5px;">Herramientas de Auditoría</h5>
           
           <div class="d-grid gap-2">
-            <!-- BOTÓN ABRIR WHATSAPP DEL JUGADOR -->
-            <a [href]="'https://wa.me/51' + reservaParaValidar.cliente.telefono" 
+            <!-- BOTÓN ABRIR WHATSAPP DEL JUGADOR (Solo si no ha subido comprobante) -->
+            <a *ngIf="reservaParaValidar.estado === 'PENDIENTE_ADELANTO'" [href]="'https://wa.me/51' + reservaParaValidar.cliente.telefono" 
                target="_blank" 
                class="btn btn-outline-success fw-bold d-flex align-items-center justify-content-center py-2.5 rounded-3 transition-all"
                style="font-size: 0.9rem;">
               <i class="bi bi-whatsapp me-2 fs-5"></i> Abrir Chat para ver Captura de Pago
             </a>
+
+            <!-- COMPROBANTE SUBIDO POR EL JUGADOR -->
+            <div *ngIf="reservaParaValidar.estado === 'ESPERANDO_CONFIRMACION' && reservaParaValidar.pago" class="bg-white bg-opacity-10 p-3 rounded-3 border border-info border-opacity-50 mt-1 mb-2">
+              <span class="text-info d-block fw-bold mb-2"><i class="bi bi-receipt me-1"></i> Comprobante del Jugador</span>
+              <div class="mb-2">
+                <span class="text-muted d-inline-block me-2" style="font-size: 0.8rem;">N° de Operación:</span>
+                <strong class="text-white bg-dark px-2 py-1 rounded">{{ reservaParaValidar.pago.numeroOperacion }}</strong>
+              </div>
+              <a [href]="getFullUrl(reservaParaValidar.pago.urlComprobante)" target="_blank" class="btn btn-sm btn-info fw-bold w-100">
+                <i class="bi bi-image me-1"></i> Ver Captura de Pantalla
+              </a>
+            </div>
             
             <!-- DATOS DONDE DEBIÓ TRANSFERIR -->
             <div class="bg-white bg-opacity-5 p-3 rounded-3 border border-secondary border-opacity-10 small mt-1 text-white-50">

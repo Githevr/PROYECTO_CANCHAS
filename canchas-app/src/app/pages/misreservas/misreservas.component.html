@@ -48,13 +48,21 @@
       <div
         class="reserva-card"
         *ngFor="let reserva of reservas"
-        [class.card-pendiente]="reserva.estado === 'PENDIENTE_ADELANTO'">
+        [class.card-pendiente]="reserva.estado === 'PENDIENTE_ADELANTO' || reserva.estado === 'ESPERANDO_CONFIRMACION'">
 
         <!-- PENDIENTE OVERLAY -->
         <div class="pendiente-overlay" *ngIf="reserva.estado === 'PENDIENTE_ADELANTO'">
             <div class="pendiente-texto">
                ⚠️ PAGO PENDIENTE DE CONFIRMACIÓN
                <small>Esta cancha NO ESTÁ RESERVADA aún. Espera la confirmación del dueño.</small>
+            </div>
+        </div>
+
+        <!-- ESPERANDO OVERLAY (Naranja igual que pendiente) -->
+        <div class="pendiente-overlay" *ngIf="reserva.estado === 'ESPERANDO_CONFIRMACION'">
+            <div class="pendiente-texto">
+               ⌛ ESPERANDO VALIDACIÓN
+               <small>Comprobante enviado. El dueño está revisando el depósito.</small>
             </div>
         </div>
 
@@ -67,9 +75,10 @@
           <span
             class="estado-badge"
             [class.estado-confirmado]="reserva.estado === 'CONFIRMADA' || reserva.estado === 'PAGADO'"
-            [class.estado-pendiente]="reserva.estado === 'PENDIENTE_ADELANTO'">
+            [class.estado-pendiente]="reserva.estado === 'PENDIENTE_ADELANTO' || reserva.estado === 'ESPERANDO_CONFIRMACION'">
 
-            {{ (reserva.estado === 'CONFIRMADA' || reserva.estado === 'PAGADO') ? '✓ Confirmado' : '⏳ Pendiente' }}
+            {{ (reserva.estado === 'CONFIRMADA' || reserva.estado === 'PAGADO') ? '✓ Confirmado' : 
+               reserva.estado === 'ESPERANDO_CONFIRMACION' ? '⏳ Verificando' : '⏳ Pendiente' }}
 
           </span>
         </div>

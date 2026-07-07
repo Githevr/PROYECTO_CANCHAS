@@ -223,7 +223,7 @@
         <h3 class="fw-bold">Envía el comprobante</h3>
 
         <p class="text-muted small">
-          Presiona el botón de WhatsApp abajo para abrir un chat directo con el propietario del complejo con los datos de tu reserva ya cargados.
+          Adjunta aquí la captura de tu transferencia y el número de operación para que el dueño valide el depósito.
         </p>
 
       </div>
@@ -289,43 +289,51 @@
 
     <!-- CONTACTO -->
 
-    <h2 class="section-title fw-bold my-4 text-center">
-      Envía tu comprobante de pago
-    </h2>
+    <!-- ESTADO ESPERANDO CONFIRMACIÓN -->
+    <div class="alert alert-success border-success shadow-sm rounded-4 p-4 text-center mb-5" *ngIf="reserva?.estado === 'ESPERANDO_CONFIRMACION'">
+      <i class="bi bi-hourglass-split text-success fs-1 mb-3 d-block"></i>
+      <h4 class="fw-bold text-success-emphasis mb-2">Comprobante Enviado</h4>
+      <p class="mb-0">El propietario está validando tu depósito. Una vez confirmado, tu reserva pasará a estado <strong>CONFIRMADA</strong>. Puedes seguir el estado en la sección <a routerLink="/misreservas" class="alert-link fw-bold">Mis Reservas</a>.</p>
+    </div>
 
-    <div class="contacto-grid mb-5" *ngIf="reserva">
+    <!-- FORMULARIO DE SUBIDA (Solo si está PENDIENTE_ADELANTO) -->
+    <div *ngIf="reserva?.estado === 'PENDIENTE_ADELANTO'">
+      <h2 class="section-title fw-bold my-4 text-center">
+        Envía tu comprobante de pago
+      </h2>
 
-      <a
-        [href]="obtenerEnlaceWhatsApp()"
-        target="_blank"
-        class="contacto-card whatsapp bg-success text-white border-0 shadow-sm d-flex flex-column align-items-center justify-content-center py-4 rounded-4 transition-all">
+      <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
+        <div class="card-body p-4 bg-light bg-opacity-50">
+          
+          <div class="row g-4">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Número de Operación <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" [(ngModel)]="numeroOperacion" placeholder="Ej: 902837482" />
+              <div class="form-text mt-1">Digita el número de operación que aparece en tu voucher de Yape/Plin o app bancaria.</div>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Captura del Comprobante <span class="text-danger">*</span></label>
+              <input type="file" class="form-control" (change)="onComprobanteSelected($event)" accept="image/*,.pdf" />
+              <div class="form-text mt-1">Sube la foto del voucher o captura de pantalla.</div>
+            </div>
+          </div>
 
-        <i class="bi bi-whatsapp fs-1 mb-2"></i>
-        <h3 class="fw-bold text-white mb-1">Enviar por WhatsApp</h3>
-        <p class="mb-3 opacity-75">+51 {{ reserva.cancha.complejo ? reserva.cancha.complejo.telefonoContacto : '987654321' }}</p>
-        <span class="btn btn-light btn-sm fw-bold text-success rounded-pill px-4">
-          Enviar comprobante ahora →
-        </span>
-
-      </a>
-
-      <a
-        [href]="'mailto:' + (reserva.cancha.complejo?.propietario?.correo || 'reservas@playfield.com') + '?subject=Comprobante de Reserva - Cancha ' + reserva.cancha.nombre"
-        class="contacto-card correo border d-flex flex-column align-items-center justify-content-center py-4 rounded-4 bg-white transition-all">
-
-        <i class="bi bi-envelope-open fs-1 text-primary mb-2"></i>
-        <h3 class="fw-bold mb-1">Enviar por Correo</h3>
-        <p class="text-muted mb-3">{{ reserva.cancha.complejo?.propietario?.correo || 'reservas@playfield.com' }}</p>
-        <span class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-4">
-          Enviar correo electrónico →
-        </span>
-
-      </a>
-
+          <div class="mt-4 text-center">
+            <button class="btn btn-success fw-bold px-5 py-2.5 rounded-pill shadow-sm" 
+                    (click)="enviarComprobante()" 
+                    [disabled]="enviandoComprobante">
+              <span *ngIf="enviandoComprobante">Enviando... <i class="spinner-border spinner-border-sm ms-2"></i></span>
+              <span *ngIf="!enviandoComprobante"><i class="bi bi-cloud-arrow-up-fill me-2"></i> Enviar Comprobante al Propietario</span>
+            </button>
+          </div>
+          
+        </div>
+      </div>
     </div>
 
     <!-- BOTON CANCELAR -->
-    <div class="d-flex flex-column align-items-center mb-5" *ngIf="reserva">
+    <div class="d-flex flex-column align-items-center mb-5" *ngIf="reserva?.estado === 'PENDIENTE_ADELANTO'">
       
       <button *ngIf="!mostrarConfirmacionCancelacion" class="btn btn-danger btn-lg fw-bold px-5 py-3 rounded-pill transition-all shadow-sm fs-5" (click)="mostrarConfirmacionCancelacion = true">
         <i class="bi bi-x-circle me-2"></i>Cancelar Operación

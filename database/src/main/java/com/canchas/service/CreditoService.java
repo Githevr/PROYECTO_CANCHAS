@@ -129,11 +129,10 @@ public class CreditoService {
         );
         historialRepository.save(historial);
 
-        // 3. Actualizar estado de la solicitud
-        recarga.setEstado("APROBADA");
-        recarga.setFechaAprobacion(LocalDateTime.now());
+        // 3. Borrar la solicitud de la base de datos para no llenar espacio innecesario
+        recargaRepository.delete(recarga);
 
-        return recargaRepository.save(recarga);
+        return recarga;
     }
 
     /**
@@ -148,10 +147,10 @@ public class CreditoService {
             throw new RuntimeException("Esta solicitud de recarga ya fue procesada previamente.");
         }
 
-        recarga.setEstado("RECHAZADA");
-        recarga.setFechaAprobacion(LocalDateTime.now()); // Registra cuándo se procesó
+        // Borrar la solicitud de la base de datos
+        recargaRepository.delete(recarga);
 
-        return recargaRepository.save(recarga);
+        return recarga;
     }
 
     public List<HistorialCredito> obtenerHistorialPropietario(Long propietarioId) {

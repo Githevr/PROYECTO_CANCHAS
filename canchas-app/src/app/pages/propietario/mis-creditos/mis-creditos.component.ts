@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from '../../../components/navbar/navbar.component';
 import { AuthService } from '../../../services/auth.service';
 import { CreditoService } from '../../../services/credito.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-mis-creditos',
@@ -24,6 +25,7 @@ export class MisCreditosComponent implements OnInit {
   nroOperacion: string = '';
   imagenComprobante: string = '';
   vistaPreviaCreditos: number = 50;
+  selectedFile: File | null = null;
 
   // Listados
   recargas: any[] = [];
@@ -36,7 +38,8 @@ export class MisCreditosComponent implements OnInit {
 
   constructor(
     public authService: AuthService,
-    private creditoService: CreditoService
+    private creditoService: CreditoService,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -94,7 +97,7 @@ export class MisCreditosComponent implements OnInit {
   onFileChange(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      // Simulación de carga de archivo guardando el nombre del archivo
+      this.selectedFile = file;
       this.imagenComprobante = file.name;
     }
   }
@@ -103,44 +106,73 @@ export class MisCreditosComponent implements OnInit {
     if (this.montoRecarga < 50) {
       this.mensaje = 'El monto mínimo de recarga es S/ 50.00.';
       this.tipoMensaje = 'error';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     if (!this.nroOperacion) {
       this.mensaje = 'Por favor, ingrese el número de operación.';
       this.tipoMensaje = 'error';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (!this.selectedFile) {
+      this.mensaje = 'Por favor, suba el comprobante de pago.';
+      this.tipoMensaje = 'error';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     this.cargando = true;
     this.mensaje = '';
 
-    const request = {
-      propietarioId: this.propietarioId,
-      monto: this.montoRecarga,
-      metodoPago: this.metodoPago,
-      nroOperacion: this.nroOperacion,
-      imagenComprobante: this.imagenComprobante || 'comprobante_recarga.png' // Valor por defecto si no subió archivo
-    };
+    // 1. Subir la imagen primero
+    const formData = new FormData();
+    formData.append('file', this.selectedFile);
 
-    this.creditoService.solicitarRecarga(request).subscribe({
-      next: (res) => {
-        this.cargando = false;
-        this.mensaje = '¡Solicitud de recarga enviada exitosamente! El administrador la verificará en unos minutos.';
-        this.tipoMensaje = 'exito';
-        
-        // Resetear campos del formulario
-        this.nroOperacion = '';
-        this.imagenComprobante = '';
-        this.montoRecarga = 50;
+    this.http.post<any>('http://localhost:8080/api/reportes/upload', formData).subscribe({
+      next: (uploadRes) => {
+        const urlComprobante = uploadRes.url;
 
-        // Recargar listas para ver la nueva solicitud pendiente
-        this.cargarDatos();
+        // 2. Solicitar recarga usando la URL devuelta por el servidor
+        const request = {
+          propietarioId: this.propietarioId,
+          monto: this.montoRecarga,
+          metodoPago: this.metodoPago,
+          nroOperacion: this.nroOperacion,
+          imagenComprobante: urlComprobante
+        };
+
+        this.creditoService.solicitarRecarga(request).subscribe({
+          next: (res) => {
+            this.cargando = false;
+            this.mensaje = '¡Solicitud de recarga enviada exitosamente! El administrador la verificará en unos minutos.';
+            this.tipoMensaje = 'exito';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Resetear campos del formulario
+            this.nroOperacion = '';
+            this.imagenComprobante = '';
+            this.selectedFile = null;
+            this.montoRecarga = 50;
+
+            // Recargar listas para ver la nueva solicitud pendiente
+            this.cargarDatos();
+          },
+          error: (err) => {
+            this.cargando = false;
+            this.mensaje = err.error || 'Ocurrió un error al procesar su recarga.';
+            this.tipoMensaje = 'error';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        });
       },
-      error: (err) => {
+      error: () => {
         this.cargando = false;
-        this.mensaje = err.error || 'Ocurrió un error al procesar su recarga.';
+        this.mensaje = 'Ocurrió un error al subir el comprobante.';
         this.tipoMensaje = 'error';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     });
   }

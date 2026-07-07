@@ -6,11 +6,12 @@ import { AuthService } from '../../../services/auth.service';
 import { ReservaService } from '../../../services/reserva.service';
 import { HttpClient } from '@angular/common/http';
 import { ToastService } from '../../../services/toast.service';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, FormsModule],
+  imports: [CommonModule, NavbarComponent, FormsModule, RouterModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
@@ -23,6 +24,7 @@ export class DashboardComponent implements OnInit {
   totalReservas: number = 0;
   pendientesAdelanto: number = 0;
   confirmadas: number = 0;
+  reservasPerdidas: number = 0;
 
   // Feedback
   mensaje: string = '';
@@ -50,7 +52,8 @@ export class DashboardComponent implements OnInit {
     public authService: AuthService,
     private reservaService: ReservaService,
     private http: HttpClient,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -59,7 +62,27 @@ export class DashboardComponent implements OnInit {
       this.propietarioId = usuario.id;
       this.cargarReservas();
       this.cargarStrikes();
+      this.cargarReservasPerdidas();
     }
+  }
+
+  cargarReservasPerdidas(): void {
+    this.http.get<any>(`http://localhost:8080/clientes/${this.propietarioId}/reservas-perdidas`).subscribe({
+      next: (res) => this.reservasPerdidas = res.reservasPerdidas,
+      error: (err) => console.error('Error cargando reservas perdidas', err)
+    });
+  }
+
+  resetReservasPerdidas(): void {
+    this.http.post(`http://localhost:8080/clientes/${this.propietarioId}/reset-reservas-perdidas`, {}).subscribe({
+      next: () => this.reservasPerdidas = 0,
+      error: (err) => console.error('Error reseteando reservas perdidas', err)
+    });
+  }
+
+  irARecargar(): void {
+    this.resetReservasPerdidas();
+    this.router.navigate(['/propietario/mis-creditos']);
   }
 
   getFullUrl(path: string): string {
@@ -148,11 +171,11 @@ export class DashboardComponent implements OnInit {
 
   // Getters para dividir la bandeja de solicitudes y la agenda activa
   get solicitudesPendientes(): any[] {
-    return this.reservas.filter(r => r.estado === 'PENDIENTE_ADELANTO');
+    return this.reservas.filter(r => r.estado === 'PENDIENTE_ADELANTO' || r.estado === 'ESPERANDO_CONFIRMACION');
   }
 
   get agendaReservas(): any[] {
-    return this.reservas.filter(r => r.estado !== 'PENDIENTE_ADELANTO');
+    return this.reservas.filter(r => r.estado !== 'PENDIENTE_ADELANTO' && r.estado !== 'ESPERANDO_CONFIRMACION');
   }
 
   // Métodos del Modal de Validación

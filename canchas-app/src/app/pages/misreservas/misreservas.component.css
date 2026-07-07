@@ -208,6 +208,8 @@
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  text-align: center;
+  z-index: 10;
 }
 
 .pendiente-texto small {
