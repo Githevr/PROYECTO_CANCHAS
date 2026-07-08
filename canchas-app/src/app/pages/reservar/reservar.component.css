@@ -564,4 +564,75 @@
     repeat(2,1fr);
   }
 
-}
+}
+
+/* ==========================
+   PAGINACIÓN
+========================== */
+
+.paginacion-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 40px;
+  padding: 20px 0;
+}
+
+.pag-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.pag-btn:hover:not(:disabled) {
+  background: #4da629;
+  color: white;
+  border-color: #4da629;
+}
+
+.pag-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pag-numeros {
+  display: flex;
+  gap: 6px;
+}
+
+.pag-numero {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pag-numero:hover {
+  background: rgba(77, 166, 41, 0.2);
+  color: #4da629;
+  border-color: #4da629;
+}
+
+.pag-numero.pag-activa {
+  background: #4da629;
+  color: white;
+  border-color: #4da629;
+  box-shadow: 0 4px 15px rgba(77, 166, 41, 0.4);
+}
+

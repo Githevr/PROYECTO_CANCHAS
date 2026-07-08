@@ -7,6 +7,7 @@ import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { AuthService } from '../../services/auth.service';
 import { ReservaService, CanchaLocal, HorarioDTO } from '../../services/reserva.service';
 import { ToastService } from '../../services/toast.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-reservar',
@@ -51,6 +52,13 @@ export class ReservarComponent implements OnInit {
   // PROPIETARIOS SIN SALDO
   complejosDeshabilitados: number[] = [];
 
+  // PAGINACIÓN
+  paginaActual: number = 0;
+  totalPaginas: number = 0;
+  totalElementos: number = 0;
+  canchasPorPagina: number = 8;
+  cargandoPagina: boolean = false;
+
   // MODAL DE CALIFICACIONES
   mostrarCalificacionModal: boolean = false;
   reservaPendienteCalificar: any = null;
@@ -61,7 +69,8 @@ export class ReservarComponent implements OnInit {
     private reservaService: ReservaService,
     private router: Router,
     private route: ActivatedRoute,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -84,23 +93,7 @@ export class ReservarComponent implements OnInit {
       }
     });
 
-    this.reservaService.getCanchas().subscribe({
-      next: (data) => {
-        this.canchas = data;
-        // Si viene una cancha preseleccionada desde el inicio, la activamos automáticamente
-        if (this.preselectedCanchaId) {
-          const encontrada = this.canchas.find(c => c.id === this.preselectedCanchaId);
-          if (encontrada) {
-            this.canchaSeleccionada = encontrada;
-            this.actualizarDisponibilidad();
-          }
-        }
-      },
-      error: () => {
-        this.mensaje = 'Error cargando canchas';
-        this.tipoMensaje = 'error';
-      }
-    });
+    this.cargarCanchasPaginado(0);
 
     const usuario = this.authService.obtenerUsuarioActual();
     if (usuario) {
@@ -116,48 +109,66 @@ export class ReservarComponent implements OnInit {
     }
   }
 
+  // PAGINACIÓN: carga canchas desde el backend página por página
+  cargarCanchasPaginado(page: number): void {
+    this.cargandoPagina = true;
+    this.reservaService.getCanchasPaginado(page, this.canchasPorPagina).subscribe({
+      next: (response) => {
+        this.canchas = response.content;
+        this.paginaActual = response.number;
+        this.totalPaginas = response.totalPages;
+        this.totalElementos = response.totalElements;
+        this.cargandoPagina = false;
+
+        // Si viene una cancha preseleccionada desde el inicio, la activamos automáticamente
+        if (this.preselectedCanchaId) {
+          const encontrada = this.canchas.find((c: CanchaLocal) => c.id === this.preselectedCanchaId);
+          if (encontrada) {
+            this.canchaSeleccionada = encontrada;
+            this.actualizarDisponibilidad();
+          }
+        }
+      },
+      error: () => {
+        this.mensaje = 'Error cargando canchas';
+        this.tipoMensaje = 'error';
+        this.cargandoPagina = false;
+      }
+    });
+  }
+
+  irAPagina(page: number): void {
+    if (page >= 0 && page < this.totalPaginas) {
+      this.cargarCanchasPaginado(page);
+      window.scrollTo({ top: 400, behavior: 'smooth' });
+    }
+  }
+
   get canchasFiltradas(): CanchaLocal[] {
+    let resultado = [...this.canchas];
 
-  let resultado = [...this.canchas];
+    // FILTRO POR PRECIO
+    if (this.precioMaximo > 0) {
+      resultado = resultado.filter(c => c.precio <= this.precioMaximo);
+    }
 
-  // FILTRO POR PRECIO
-  if (this.precioMaximo > 0) {
-    resultado = resultado.filter(
-      c => c.precio <= this.precioMaximo
-    );
-  }
+    // FILTRO POR DEPORTE
+    if (this.deporteSeleccionado && this.deporteSeleccionado !== 'Todos') {
+      resultado = resultado.filter(c =>
+        c.tipo.toLowerCase() === this.deporteSeleccionado.toLowerCase()
+      );
+    }
 
-  // FILTRO POR DEPORTE
-  if (
-    this.deporteSeleccionado &&
-    this.deporteSeleccionado !== 'Todos'
-  ) {
-
-    resultado = resultado.filter(
-      c =>
-        c.tipo.toLowerCase() ===
-        this.deporteSeleccionado.toLowerCase()
-    );
-
-  }
-
-  // FILTRO POR UBICACION (SOPORTA LEGAJO Y COMPLEJOS POR CIUDAD)
-  if (
-    this.ubicacionSeleccionada &&
-    this.ubicacionSeleccionada !== 'Todos'
-  ) {
-
-    resultado = resultado.filter(
-      c =>
+    // FILTRO POR UBICACION
+    if (this.ubicacionSeleccionada && this.ubicacionSeleccionada !== 'Todos') {
+      resultado = resultado.filter(c =>
         c.ubicacion.toLowerCase().includes(this.ubicacionSeleccionada.toLowerCase()) ||
         (c.complejo && c.complejo.ciudad.toLowerCase().includes(this.ubicacionSeleccionada.toLowerCase()))
-    );
+      );
+    }
 
+    return resultado;
   }
-
-  return resultado;
-
-}
 
   seleccionarCancha(cancha: CanchaLocal) {
 

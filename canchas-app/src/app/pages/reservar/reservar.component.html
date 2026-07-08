@@ -101,7 +101,7 @@
       <h2>Canchas disponibles</h2>
 
       <span>
-        {{ canchasFiltradas.length }} resultados
+        {{ totalElementos }} resultados (página {{ paginaActual + 1 }} de {{ totalPaginas }})
       </span>
 
     </div>
@@ -191,6 +191,27 @@
 
       </div>
 
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="paginacion-container" *ngIf="totalPaginas > 1">
+      <button class="pag-btn" (click)="irAPagina(paginaActual - 1)" [disabled]="paginaActual === 0">
+        ← Anterior
+      </button>
+
+      <div class="pag-numeros">
+        <button
+          *ngFor="let p of [].constructor(totalPaginas); let i = index"
+          class="pag-numero"
+          [class.pag-activa]="i === paginaActual"
+          (click)="irAPagina(i)">
+          {{ i + 1 }}
+        </button>
+      </div>
+
+      <button class="pag-btn" (click)="irAPagina(paginaActual + 1)" [disabled]="paginaActual >= totalPaginas - 1">
+        Siguiente →
+      </button>
     </div>
 
     <!-- PANEL RESERVA -->

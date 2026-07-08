@@ -33,6 +33,10 @@ export class ReservaService {
     return this.http.get<CanchaLocal[]>('http://localhost:8080/canchas');
   }
 
+  getCanchasPaginado(page: number, size: number): Observable<any> {
+    return this.http.get<any>(`http://localhost:8080/canchas/paginado?page=${page}&size=${size}`);
+  }
+
   getHorariosDisponibles(canchaId: number, fecha: string): Observable<HorarioDTO[]> {
     return this.http.get<HorarioDTO[]>(`${this.apiUrl}/disponibilidad/${canchaId}?fecha=${fecha}`);
   }
